@@ -1,0 +1,182 @@
+/* ===== Background Laman ===== */
+body {
+    background-image: url('../front-end-awal/assets/background\ uniform-u.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* ===== Logo di Laman Masuk ===== */
+.logo {
+    width: 80px;
+    height: auto;
+}
+
+/* ===== Tombol Kustom ===== */
+.custom-btn {
+    background-color: #100f0f;
+    color: white;
+    border: none;
+}
+
+.custom-btn:hover {
+    background-color: #292828;
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    background-color: #fff;
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    z-index: 100;
+}
+
+.sidebar.collapsed {
+    width: 70px;
+}
+
+/* ===== Header Sidebar ===== */
+.sidebar-header {
+    height: 70px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #ddd;
+    position: relative;
+}
+
+/* ===== Logo Sidebar ===== */
+.sidebar-logo {
+    height: 50px;
+    width: auto;
+    display: block;
+    margin: 0 auto;
+    transition: all 0.3s ease;
+}
+
+.sidebar.collapsed .sidebar-logo {
+    display: none;
+}
+
+/* ===== Tombol Toggle ===== */
+.toggle-btn {
+    font-size: 1.4rem;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.sidebar:not(.collapsed) .toggle-btn {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+}
+
+.sidebar.collapsed .toggle-btn {
+    display: flex;
+}
+
+/* ===== Navigasi Sidebar ===== */
+.sidebar .nav {
+    flex-grow: 1;
+    padding: 10px 0;
+}
+
+.sidebar .nav-link {
+    color: #333;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    transition: background-color 0.2s ease;
+}
+
+.sidebar .nav-link i {
+    font-size: 1.2rem;
+    margin-right: 12px;
+    min-width: 24px;
+    text-align: center;
+    transition: opacity 0.2s ease;
+}
+
+.sidebar .nav-link:hover {
+    background-color: #f8f9fa;
+}
+
+/* ===== Sidebar Collapsed ===== */
+.sidebar.collapsed .nav-link {
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.sidebar.collapsed .nav-link i,
+.sidebar.collapsed .sidebar-text {
+    display: none;
+}
+
+.sidebar.collapsed:hover .nav-link i,
+.sidebar.collapsed:hover .sidebar-text {
+    display: inline-block;
+}
+
+/* ===== Teks Sidebar ===== */
+.sidebar .sidebar-text {
+    display: inline;
+    transition: opacity 0.2s ease;
+}
+
+/* ===== Footer (Profil Pengguna) ===== */
+.sidebar-footer {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #eee;
+    cursor: pointer;
+    text-decoration: none;
+    color: #333;
+    transition: background-color 0.2s ease;
+}
+
+.sidebar-footer:hover {
+    background-color: #f8f9fa;
+}
+
+.sidebar-footer img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+}
+
+.user-info {
+    line-height: 1.2;
+}
+
+/* ===== Collapsed Footer ===== */
+.sidebar.collapsed .sidebar-footer {
+    justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-footer img {
+    margin: 0;
+}
+
+.sidebar.collapsed .user-info {
+    display: none;
+}
