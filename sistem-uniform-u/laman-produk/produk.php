@@ -1,3 +1,23 @@
+<?php
+// koneksi database
+$servername = "localhost";
+$username = "root";
+$password = "";
+$database = "db_uniform";
+
+$conn = mysqli_connect($servername, $username, $password, $database);
+if (!$conn) {
+    die("Koneksi gagal: " . mysqli_connect_error());
+}
+
+$query = "SELECT * FROM produk";
+$result = mysqli_query($conn, $query);
+
+if (!$result) {
+    die("Query gagal: " . mysqli_error($conn));
+}
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -145,134 +165,99 @@
   </style>
 </head>
 <body>
-  <div class="main-wrapper">
-    <?php include '../sidebar.php'; ?> <!--Menambahkan sidebar-->
+<div class="main-wrapper">
+  <?php include '../sidebar.php'; ?> <!-- Sidebar -->
 
-    <!-- Main Content -->
-    <div class="main-content">
-      <h1>Produk</h1>
-      <hr>
+  <div class="main-content">
+    <h1>Produk</h1>
+    <hr>
 
-      <!-- Toolbar -->
-      <div class="product-toolbar">
-        <h6 class="mb-1">List Produk</h6>
-        
-        <div class="d-flex align-items-center gap-2">
-          <button class="btn btn-light border text-black">
-            <i class="fas fa-plus me-1"></i> Tambah Produk
-          </button>
-      
-          <div class="input-icon">
-            <i class="fas fa-search"></i>
-            <input type="text" class="form-control" placeholder="Cari produk...">
-          </div>
+    <!-- Toolbar -->
+    <div class="product-toolbar">
+      <h6 class="mb-1">List Produk</h6>
+      <div class="d-flex align-items-center gap-2">
+        <a href="add_produk.php" class="btn btn-light border text-black">
+          <i class="fas fa-plus me-1"></i> Tambah Produk
+        </a>
+        <div class="input-icon">
+          <i class="fas fa-search"></i>
+          <input type="text" class="form-control" placeholder="Cari produk...">
         </div>
-      </div>
-
-      <!-- Kategori -->
-      <div class="product-categories">
-        <button class="btn btn-light border text-black">Semua Produk</button>
-        <button class="btn sd-btn">SD</button>
-        <button class="btn smp-btn">SMP</button>
-        <button class="btn sma-btn">SMA</button>
-      </div>
-
-      <!-- Product Cards -->
-      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
-        <!-- Contoh product card (duplikat sesuai kebutuhan) -->
-        <!-- Produk 1 -->
-        <div class="col">
-          <div class="card product-card">
-            <img src="Kemeja.png" class="card-img-top" alt="Produk 1">
-            <div class="card-body">
-              <span class="product-tag tag-smp">SMP</span>
-              <div class="d-flex justify-content-between align-items-center">
-                <strong>Kemeja Putih</strong>
-                <i class="fas fa-edit text-muted"></i>
-              </div>
-              <small class="text-muted">Pria</small>
-              <hr>
-              <div class="size-buttons">
-                <button class="btn btn-outline-secondary btn-sm" onclick="showStock(this, 10)">XS</button>
-                <button class="btn btn-outline-secondary btn-sm" onclick="showStock(this, 15)">S</button>
-                <button class="btn btn-outline-secondary btn-sm" onclick="showStock(this, 8)">M</button>
-                <button class="btn btn-outline-secondary btn-sm" onclick="showStock(this, 5)">L</button>
-                <button class="btn btn-outline-secondary btn-sm" onclick="showStock(this, 2)">XL</button>
-              </div>
-              <div class="stock-text"></div>
-              <hr>
-              <h6 class="fw-bold">IDR 124,850</h6>
-            </div>
-          </div>
-        </div>
-
-        <!-- Produk 2 -->
-        <div class="col">
-          <div class="card product-card">
-            <img src="Rok.png" class="card-img-top" alt="Produk 1">
-            <div class="card-body">
-              <span class="product-tag tag-sd">SD</span>
-              <div class="d-flex justify-content-between align-items-center">
-                <strong>Rok Merah</strong>
-                <i class="fas fa-edit text-muted"></i>
-              </div>
-              <small class="text-muted">Wanita</small>
-              <hr>
-              <div class="size-buttons">
-                <button class="btn btn-outline-secondary btn-sm" onclick="showStock(this, 10)">XS</button>
-                <button class="btn btn-outline-secondary btn-sm" onclick="showStock(this, 15)">S</button>
-                <button class="btn btn-outline-secondary btn-sm" onclick="showStock(this, 8)">M</button>
-                <button class="btn btn-outline-secondary btn-sm" onclick="showStock(this, 5)">L</button>
-                <button class="btn btn-outline-secondary btn-sm" onclick="showStock(this, 2)">XL</button>
-              </div>
-              <div class="stock-text"></div>
-              <hr>
-              <h6 class="fw-bold">IDR 94,760</h6>
-            </div>
-          </div>
-        </div>
-
-        <!-- Produk 3 -->
-        <div class="col">
-          <div class="card product-card">
-            <img src="Topi.png" class="card-img-top" alt="Produk 1">
-            <div class="card-body">
-              <span class="product-tag tag-sma">SMA</span>
-              <div class="d-flex justify-content-between align-items-center">
-                <strong>Topi Abu-Abu</strong>
-                <i class="fas fa-edit text-muted"></i>
-              </div>
-              <small class="text-muted">Unisex</small>
-              <hr>
-              <strong> </strong>
-              <h6 class="fw-bold">IDR 46,560</h6>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Produk 4 -->
-        <div class="col">
-          <div class="card product-card">
-            <img src="Sabuk.png" class="card-img-top" alt="Produk 4">
-            <div class="card-body">
-              <span class="product-tag tag-smp">SMP</span>
-              <div class="d-flex justify-content-between align-items-center">
-                <strong>Sabuk OSIS Kuning</strong>
-                <i class="fas fa-edit text-muted"></i>
-              </div>
-              <small class="text-muted">Unisex</small>
-              <hr>
-              <strong> </strong>
-              <h6 class="fw-bold">IDR 29,980</h6>
-            </div>
-          </div>
-        </div>       
-
       </div>
     </div>
-  </div>
 
-  <script>
+    <!-- Kategori -->
+    <div class="product-categories">
+      <button class="btn btn-light border text-black">Semua Produk</button>
+      <button class="btn sd-btn">SD</button>
+      <button class="btn smp-btn">SMP</button>
+      <button class="btn sma-btn">SMA</button>
+    </div>
+
+<div class="container mt-4">
+    <h3>List Produk</h3>
+    <div class="row" id="listProduk">
+        <?php while ($row = mysqli_fetch_assoc($result)) : ?>
+            <?php 
+                $id = $row['id_produk'];
+                $nama = $row['nama_produk'];
+                $kategori = $row['kategori'];
+                $gambar = $row['gambar_produk'];
+                $harga = number_format($row['harga'], 0, ',', '.');
+
+                // Ambil semua entri stok produk ini
+                $stokQuery = mysqli_query($conn, "SELECT size, stok FROM produk_stock WHERE id_produk = '$id'");
+                $sizes = [];
+
+                while ($data = mysqli_fetch_assoc($stokQuery)) {
+                    $cleanedSize = trim($data['size']);
+                    // Validasi ukuran (hanya nilai yang benar seperti S, M, L, XL, dst)
+                    if ($cleanedSize !== '' && $cleanedSize !== '-' && preg_match('/^[A-Za-z0-9]+$/', $cleanedSize)) {
+                        $sizes[] = $data;
+                    }
+                }
+
+                // Jika tidak ada ukuran valid, maka produk dianggap tidak memiliki size
+                $punyaUkuran = count($sizes) > 0;
+            ?>
+            <div class="col-md-3 mb-4 produk-item">
+                <div class="card h-100 product-card" data-product-id="<?= $id ?>">
+                   <img src="/PBW-4C-SI-2024/assets/uniform/<?= htmlspecialchars($gambar) ?>" 
+                      class="card-img-top" 
+                      alt="<?= htmlspecialchars($nama) ?>" 
+                      style="height: 200px; object-fit: contain;" />
+
+                    <div class="card-body d-flex flex-column">
+                        <span class="badge bg-info text-dark mb-2"><?= htmlspecialchars($kategori) ?></span>
+                        <h5 class="card-title"><?= htmlspecialchars($nama) ?></h5>
+                        <p class="card-text mb-1">Rp <?= $harga ?></p>
+
+                        <?php if ($punyaUkuran): ?>
+                            <div class="mb-2">
+                                <?php foreach ($sizes as $data): ?>
+                                    <button class="btn btn-sm btn-outline-primary me-1 mb-1" onclick="showStock(this, '<?= $data['size'] ?>')">
+                                        <?= htmlspecialchars($data['size']) ?>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <button class="btn btn-sm btn-outline-secondary mb-2" onclick="showStock(this)">Show Stock</button>
+                        <?php endif; ?>
+
+                        <p class="stock-text fw-bold text-success mt-2"></p>
+
+                        <!-- Tombol Edit dan Hapus -->
+                        <div class="mt-auto d-flex justify-content-between">
+                            <a href="update-produk.php?id=<?= $id ?>" class="btn btn-sm btn-warning">Edit</a>
+                            <a href="hapus-produk.php?id=<?= $id ?>" class="btn btn-sm btn-warning">Hapus</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endwhile; ?>
+    </div>
+</div>
+ <script>
   const sidebar = document.getElementById('sidebar');
   const toggleBtn = document.getElementById('toggleSidebar');
   const logo = document.getElementById('sidebarLogo');
@@ -293,14 +278,54 @@
     }
   });
 
-    function showStock(button, stock) {
-      const allButtons = button.parentElement.querySelectorAll('button');
-      allButtons.forEach(btn => btn.classList.remove('active'));
-      button.classList.add('active');
+  // Fungsi showStock untuk produk dengan atau tanpa ukuran
+  function showStock(button, size = null) {
+    const productId = button.closest('.product-card').getAttribute('data-product-id');
+    const stockDiv = button.closest('.card-body').querySelector('.stock-text');
 
-      const stockDiv = button.closest('.card-body').querySelector('.stock-text');
-      stockDiv.textContent = `Stok: ${stock}`;
+    // Jika produk tanpa ukuran (ID 3 atau 4)
+      if (!size) {
+    fetch(`get_stock.php?id_produk=${productId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.stock !== undefined) {
+          // Tampilkan stok meskipun 0
+          stockDiv.textContent = `Stok: ${data.stock}`;
+        } else if (data.error) {
+          stockDiv.textContent = `Error: ${data.error}`;
+        } else {
+          stockDiv.textContent = 'Stok: Tidak tersedia';
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Terjadi kesalahan saat mengambil stok.');
+      });
+  } else {
+      // Produk dengan ukuran (gunakan parameter size)
+      if (!size) {
+        return;
+      }
+
+      fetch(`get_stock.php?id_produk=${productId}&size=${size}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.stock !== undefined) {
+            stockDiv.textContent = `Stok: ${data.stock}`;
+          } else if (data.error) {
+            stockDiv.textContent = `Error: ${data.error}`;
+            alert(`Error: ${data.error}`);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Terjadi kesalahan saat mengambil stok.');
+        });
     }
-  </script>
+  }
+</script>
+
+
+
 </body>
 </html>

@@ -29,7 +29,8 @@
                             <label for="new-password" class="form-label">Password</label>
                             <input type="password" id="new-password" class="form-control" placeholder="Buat password" required>
                         </div>
-                        <button type="submit" class="btn custom-btn w-100">Daftar</button>
+                      <button type="button" class="btn custom-btn w-100" onclick="window.location.href='lengkapiprofil.php'">Daftar</button>
+
                     </form>
                     <div class="text-center mt-3">
                         <p>Sudah punya akun? <a href="login.html" class="text-decoration-none">Login di sini</a></p>

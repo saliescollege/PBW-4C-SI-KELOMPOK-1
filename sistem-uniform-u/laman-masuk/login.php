@@ -37,7 +37,7 @@
                         <a href="laman-masuk\reset-password.html" class="text-decoration-none">Lupa Password?</a>
                     </div>
                     <div class="text-center mt-2">
-                        <p>Belum punya akun? <a href="laman-masuk\register.html" class="text-decoration-none">Daftar di sini</a></p>
+                        <p>Belum punya akun? <a href="register.php" class="text-decoration-none">Daftar di sini</a></p>
                     </div>
                 </div>
             </div>
