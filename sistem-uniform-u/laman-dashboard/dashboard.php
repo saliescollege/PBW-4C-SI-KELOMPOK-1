@@ -1,3 +1,33 @@
+<?php
+// koneksi database (sesuaikan)
+$host = 'localhost';
+$dbname = 'db_uniform';
+$username = 'root';
+$password = '';
+
+try {
+    $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Koneksi gagal: " . $e->getMessage());
+}
+
+// Query produk dengan total stok kurang dari 5
+$sql = "
+    SELECT p.id_produk, p.nama_produk, p.kategori, p.warna, p.harga,
+           SUM(IFNULL(ps.stok, 0)) AS total_stok
+    FROM produk p
+    LEFT JOIN produk_stock ps ON p.id_produk = ps.id_produk
+    GROUP BY p.id_produk
+    HAVING total_stok < 5
+    ORDER BY total_stok ASC
+    LIMIT 5
+";
+
+$stmt = $conn->query($sql);
+$produk_reminder = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -92,36 +122,38 @@
     </div>
   </div>
 
-  <!-- Produk Hampir Habis -->
-  <div class="col-lg-4">
-    <div class="card shadow-sm border-0 h-100">
-      <div class="card-body">
-        <h5 class="card-title mb-3">Stok Hampir Habis!</h5>
-        <div class="card product-card mb-3">
-          <img src="../assets/uniform/Rok.png" class="card-img-top img-fluid" style="max-height: 400px; max-width: 400px; object-fit: contain;" alt="Stok Hampir Habis">
-          <div class="card-body">
-            <span class="product-tag tag-sd">SD</span>
-            <div class="d-flex justify-content-between align-items-center">
-              <strong>Rok Merah</strong>
+<!-- Produk Hampir Habis -->
+<div class="col-lg-4">
+  <div class="card shadow-sm border-0 h-100">
+    <div class="card-body">
+      <h5 class="card-title mb-3">Stok Hampir Habis!</h5>
+
+      <?php if (count($produk_reminder) > 0): ?>
+        <?php foreach ($produk_reminder as $produk): ?>
+          <div class="card product-card mb-3">
+            <!-- Ganti image sesuai produk, kalau gak ada pake placeholder -->
+            <img src="../assets/uniform/default.png" class="card-img-top img-fluid" style="max-height: 200px; object-fit: contain;" alt="<?= htmlspecialchars($produk['nama_produk']) ?>">
+            <div class="card-body">
+              <span class="product-tag tag-sd"><?= htmlspecialchars($produk['kategori']) ?></span>
+              <div class="d-flex justify-content-between align-items-center">
+                <strong><?= htmlspecialchars($produk['nama_produk']) ?></strong>
+              </div>
+              <small class="text-muted"><?= htmlspecialchars($produk['warna']) ?></small>
+              <hr>
+              <div class="stock-text <?= ($produk['total_stok'] <= 2) ? 'text-danger' : '' ?>">
+                Stok tersisa: <?= $produk['total_stok'] ?>
+              </div>
+              <hr>
+              <h6 class="fw-bold">Rp <?= number_format($produk['harga'], 0, ',', '.') ?></h6>
             </div>
-            <small class="text-muted">Wanita</small>
-            <hr>
-            <div class="size-buttons">
-              <button class="btn btn-outline-secondary btn-sm" onclick="showStock(this, 2)">XL</button>
-              <button class="btn btn-outline-secondary btn-sm" onclick="showStock(this, 1)">L</button>
-              <button class="btn btn-outline-secondary btn-sm" onclick="showStock(this, 0)">M</button>
-            </div>
-            <div class="stock-text text-danger mt-2">Stok beberapa ukuran hampir habis!</div>
-            <hr>
-            <h6 class="fw-bold">IDR 94,760</h6>
           </div>
-        </div>
-      </div>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <p>Semua produk stoknya aman.</p>
+      <?php endif; ?>
+
     </div>
   </div>
-</div>
-
-</div>
 </div>
 
 <!-- Efek Collapse di Sidebar -->
