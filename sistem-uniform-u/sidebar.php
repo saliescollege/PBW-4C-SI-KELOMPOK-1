@@ -1,7 +1,4 @@
-<?php
-  // Base URL tetap agar sidebar bisa dipakai dari mana saja
-  $base_url = "/PBW-UAS/PBW-4C-SI-KELOMPOK-1/sistem-uniform-u/";
-?>
+<?php include_once __DIR__ . '/config.php'; ?>
 
 <div class="d-flex">
   <!-- Sidebar -->

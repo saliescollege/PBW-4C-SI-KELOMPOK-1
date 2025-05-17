@@ -46,13 +46,19 @@
     <h1>Pesanan</h1>
     <hr>
     <!-- Toolbar -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h6 class="mb-1">List Transaksi</h6>
-        <div class="input-group" style="max-width: 300px;">
-            <span class="input-group-text"><i class="fas fa-search"></i></span>
-            <input type="text" id="searchInput" class="form-control" placeholder="Cari transaksi...">
+     <div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 class="mb-1">List Transaksi</h6>
+      <div class="d-flex align-items-center gap-2">
+        <a href="pesanan_baru.php" class="btn btn-light border text-black">
+          <i class="fas fa-plus me-1"></i> Tambah Pesanan
+        </a>
+        <div class="input-group" style="max-width: 250px;">
+          <span class="input-group-text"><i class="fas fa-search"></i></span>
+          <input type="text" id="searchInput" class="form-control" placeholder="Cari transaksi...">
         </div>
+      </div>
     </div>
+
 
     <!-- Card List Pesanan -->
     <div class="card shadow-sm mb-4">
