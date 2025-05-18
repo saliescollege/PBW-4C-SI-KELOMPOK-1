@@ -32,7 +32,7 @@
     </ul>
 
     <!-- Profile Pengguna -->
-    <a href="<?= $base_url ?>user-profile.php" class="sidebar-footer d-flex align-items-center border-top mt-auto py-2 px-3 text-decoration-none text-dark">
+    <a href="<?= $base_url ?>laman-user/user-profile.php" class="sidebar-footer d-flex align-items-center border-top mt-auto py-2 px-3 text-decoration-none text-dark">
       <img src="<?= $base_url ?>assets/PFP.png" class="rounded-circle me-2" width="32" height="32" alt="User">
       <div class="user-info">
         <div class="fw-semibold sidebar-text">Nana Ayu</div>
