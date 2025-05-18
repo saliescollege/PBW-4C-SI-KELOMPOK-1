@@ -1,4 +1,5 @@
 <?php
+session_start();
 // koneksi database (sesuaikan)
 $host = 'localhost';
 $dbname = 'db_uniform';

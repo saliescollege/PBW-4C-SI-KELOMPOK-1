@@ -1,7 +1,26 @@
 <?php
   // Base URL tetap agar sidebar bisa dipakai dari mana saja
-  $base_url = "/PBW-UAS/PBW-4C-SI-KELOMPOK-1/sistem-uniform-u/";
+  $base_url = "/PBW-4C-SI-KELOMPOK-1/sistem-uniform-u/";
+
+// Ambil user_id dari session
+$user_id = $_SESSION['user_id'] ?? null;
+
+$nama = 'Nama User';
+$email = 'emailuser@example.com';
+
+if ($user_id) {
+    $stmt = $conn->prepare("SELECT full_name, email FROM user_profile WHERE user_id = :user_id LIMIT 1");
+    $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($row) {
+        $nama = $row['full_name'];
+        $email = $row['email'];
+    }
+}
 ?>
+
 
 <div class="d-flex">
   <!-- Sidebar -->
@@ -34,13 +53,16 @@
       </li>
     </ul>
 
+
     <!-- Profile Pengguna -->
-    <a href="<?= $base_url ?>user-profile.php" class="sidebar-footer d-flex align-items-center border-top mt-auto py-2 px-3 text-decoration-none text-dark">
+    <a href="<?= $base_url ?>laman-user/user-profile.php" class="sidebar-footer d-flex align-items-center border-top mt-auto py-2 px-3 text-decoration-none text-dark">
       <img src="<?= $base_url ?>assets/PFP.png" class="rounded-circle me-2" width="32" height="32" alt="User">
       <div class="user-info">
         <div class="fw-semibold sidebar-text">Nana Ayu</div>
         <small class="text-muted sidebar-text">@nanaayu</small>
       </div>
     </a>
+
+
   </div>
 </div>
