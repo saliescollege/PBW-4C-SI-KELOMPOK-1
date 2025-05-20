@@ -1,20 +1,9 @@
 <?php
 session_start();
 include '../koneksi.php';
-// Mendapatkan protocol (http/https)
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
-
-// Mendapatkan host (localhost atau domain)
-$host = $_SERVER['HTTP_HOST'];
-
-// Ubah sesuai nama folder project di htdocs
-$projectFolder = '/PBW-4C-SI-KELOMPOK-1/sistem-uniform-u';
-
-// Gabungkan jadi base URL
-$base_url = $protocol . '://' . $host . $projectFolder . '/';
+include '../config.php';
 
 $user_id = $_SESSION['user_id'];
-
 
 // Ambil data user_profile dari database
 $sql = "SELECT * FROM user_profile WHERE user_id = '$user_id'";
@@ -37,7 +26,6 @@ $profile = mysqli_fetch_assoc($result);
   <?php include '../sidebar.php'; ?>
 
 
-  <!-- Konten utama -->
   <div class="flex-grow-1 p-4">
     <h2>Profil Anda</h2>
     <?php if ($profile): ?>

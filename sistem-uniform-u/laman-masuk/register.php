@@ -1,22 +1,7 @@
 <?php
 session_start();
-
-
-// Koneksi ke database
-$host = "localhost";
-$user = "root";
-$pass = "";    
-$db   = "db_uniform";
-
-
-$conn = new mysqli($host, $user, $pass, $db);
-
-
-// Cek koneksi
-if ($conn->connect_error) {
-    die("Koneksi gagal: " . $conn->connect_error);
-}
-
+include '../koneksi.php';
+include '../config.php';
 
 // Jika form disubmit
 $errMsg = "";
@@ -25,7 +10,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = trim($_POST["email"]);
     $password = $_POST["password"];
     $created_at = date("Y-m-d H:i:s");
-
 
     // Cek apakah username sudah ada
     $stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
@@ -38,19 +22,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     } else {
         $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
-
         $stmt = $conn->prepare("INSERT INTO users (username, email, password_hash, created_at) VALUES (?, ?, ?, ?)");
         $stmt->bind_param("ssss", $username, $email, $password_hash, $created_at);
        
         if ($stmt->execute()) {
-            $user_id = $conn->insert_id;
-            $_SESSION['user_id'] = $user_id;
-            // Redirect setelah berhasil registrasi
-            header("Location: lengkapiprofil.php");
-            exit;
-        } else {
-            $errMsg = "Gagal menyimpan data.";
-        }
+    $user_id = $conn->insert_id;
+    header("Location: lengkapiprofil.php?user_id=$user_id");
+    exit;
+}
+
     }
 }
 ?>

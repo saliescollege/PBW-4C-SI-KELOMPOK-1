@@ -1,4 +1,10 @@
-<?php include_once '../config.php'; ?>
+<?php
+include '../config.php'; 
+include '../koneksi.php';
+
+$username = $_SESSION['username'] ?? '';
+$email = $_SESSION['email'] ?? '';
+?>
 
 <div class="d-flex">
   <!-- Sidebar -->
@@ -35,8 +41,8 @@
     <a href="<?= $base_url ?>laman-user/user-profile.php" class="sidebar-footer d-flex align-items-center border-top mt-auto py-2 px-3 text-decoration-none text-dark">
       <img src="<?= $base_url ?>assets/PFP.png" class="rounded-circle me-2" width="32" height="32" alt="User">
       <div class="user-info">
-        <div class="fw-semibold sidebar-text">Nana Ayu</div>
-        <small class="text-muted sidebar-text">@nanaayu</small>
+        <div class="fw-semibold sidebar-text"><?= htmlspecialchars($username) ?></div>
+        <small class="text-muted sidebar-text"><?= htmlspecialchars($email) ?></small>
       </div>
     </a>
   </div>
