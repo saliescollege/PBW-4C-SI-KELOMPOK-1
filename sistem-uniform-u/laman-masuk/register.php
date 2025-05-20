@@ -1,24 +1,8 @@
 <?php
 session_start();
 
+require_once '../koneksi.php';
 
-// Koneksi ke database
-$host = "localhost";
-$user = "root";
-$pass = "";    
-$db   = "db_uniform";
-
-
-$conn = new mysqli($host, $user, $pass, $db);
-
-
-// Cek koneksi
-if ($conn->connect_error) {
-    die("Koneksi gagal: " . $conn->connect_error);
-}
-
-
-// Jika form disubmit
 $errMsg = "";
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $username = trim($_POST["username"]);
@@ -26,8 +10,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $password = $_POST["password"];
     $created_at = date("Y-m-d H:i:s");
 
-
-    // Cek apakah username sudah ada
     $stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
     $stmt->bind_param("s", $username);
     $stmt->execute();
@@ -43,7 +25,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $stmt->bind_param("ssss", $username, $email, $password_hash, $created_at);
        
         if ($stmt->execute()) {
-            // Redirect setelah berhasil registrasi
             header("Location: lengkapiprofil.php");
             exit;
         } else {
@@ -82,19 +63,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             <label for="new-username" class="form-label">Username</label>
                             <input type="text" id="new-username" name="username" class="form-control" placeholder="Masukkan username" required>
                         </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" id="email" name="email" class="form-control" placeholder="Masukkan email" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="new-password" class="form-label">Password</label>
-                            <input type="password" id="new-password" name="password" class="form-control" placeholder="Buat password" required>
-                        </div>
-                      <button type="button" class="btn custom-btn w-100" onclick="window.location.href='lengkapiprofil.php'">Daftar</button>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="Masukkan email" required>
+                    </div>
+                <div class="mb-3">
+                    <label for="new-password" class="form-label">Password</label>
+                    <input type="password" id="new-password" name="password" class="form-control" placeholder="Buat password" required>
+                </div>
+                      <button type="submit" class="btn custom-btn w-100" onclick="window.location.href='lengkapiprofil.php'">Daftar</button>
 
                     </form>
                     <div class="text-center mt-3">
-                        <p>Sudah punya akun? <a href="login.html" class="text-decoration-none">Login di sini</a></p>
+                        <p>Sudah punya akun? <a href="login.php" class="text-decoration-none">Login di sini</a></p>
                     </div>
                 </div>
             </div>

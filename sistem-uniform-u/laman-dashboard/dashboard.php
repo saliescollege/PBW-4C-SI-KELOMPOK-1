@@ -1,18 +1,6 @@
 <?php
-// koneksi database (sesuaikan)
-$host = 'localhost';
-$dbname = 'db_uniform';
-$username = 'root';
-$password = '';
+require '../koneksi.php';
 
-try {
-    $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    die("Koneksi gagal: " . $e->getMessage());
-}
-
-// Query produk dengan total stok kurang dari 5
 $sql = "
     SELECT p.id_produk, p.nama_produk, p.kategori, p.warna, p.harga,
            SUM(IFNULL(ps.stok, 0)) AS total_stok
@@ -25,7 +13,15 @@ $sql = "
 ";
 
 $stmt = $conn->query($sql);
-$produk_reminder = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$produk_reminder = [];
+if ($stmt) {
+    while ($row = $stmt->fetch_assoc()) {
+        $produk_reminder[] = $row;
+    }
+} else {
+    echo "Query error: " . $conn->error;
+}
 ?>
 
 <!DOCTYPE html>

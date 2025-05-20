@@ -1,16 +1,7 @@
 <?php
 session_start();
 
-// KONFIGURASI KONEKSI DATABASE
-$servername = "localhost";
-$db_username = "root";      
-$db_password = "";          
-$dbname = "db_uniform";         
-
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
-if ($conn->connect_error) {
-    die("Koneksi gagal: " . $conn->connect_error);
-}
+require_once '../koneksi.php';
 
 $error = '';
 
@@ -25,16 +16,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $result = $stmt->get_result();
 
     if ($result->num_rows === 1) {
-        $user = $result->fetch_assoc();
+    $user = $result->fetch_assoc();
 
-        // Verifikasi password
-        if (password_verify($password, $user['password_hash'])) {
-            // Login berhasil, simpan session
+    if ($password === $user['password_hash']) {
             $_SESSION['username'] = $user['username'];
             $_SESSION['user_id'] = $user['id'];
 
             header('Location: /PBW-4C-SI-KELOMPOK-1/sistem-uniform-u/laman-dashboard/dashboard.php');
-            exit();            
+            exit();
         } else {
             $error = "Username atau password salah!";
         }

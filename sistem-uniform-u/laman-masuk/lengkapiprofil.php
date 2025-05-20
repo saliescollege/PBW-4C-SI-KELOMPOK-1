@@ -1,21 +1,15 @@
 <?php
 session_start();
 
+require_once '../koneksi.php';
 
-// KONFIGURASI KONEKSI DATABASE
-$servername = "localhost";
-$db_username = "root";      
-$db_password = "";          
-$dbname = "db_uniform";        
-
-
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
-if ($conn->connect_error) {
-    die("Koneksi gagal: " . $conn->connect_error);
-}
-
+$error_message = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!isset($_SESSION['user_id'])) { 
+      header("Location: login.php");
+        exit();
+    }
     $user_id = $_SESSION['user_id'];
     $full_name = mysqli_real_escape_string($conn, $_POST['full_name']);
     $phone_number = mysqli_real_escape_string($conn, $_POST['phone_number']);
@@ -26,26 +20,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 
     $cek = mysqli_query($conn, "SELECT * FROM user_profile WHERE user_id = '$user_id'");
-    if (mysqli_num_rows($cek) > 0) {
+    $cek->bind_param("i", $user_id);
+    $cek->execute();
+    $result = $cek->get_result();
+
+    if ($result->num_rows > 0) {
         // update
-        $query = "UPDATE user_profile SET
-                    full_name = '$full_name',
-                    phone_number = '$phone_number',
-                    address = '$address',
-                    gender = '$gender',
-                    birth_date = '$birth_date',
-                    updated_at = '$updated_at'
-                  WHERE user_id = '$user_id'";
+        $query = $conn->prepare("UPDATE user_profile SET full_name=?, phone_number=?, address=?, gender=?, birth_date=?, updated_at=? WHERE user_id=?");
+        $query->bind_param("ssssssi", $full_name, $phone_number, $address, $gender, $birth_date, $updated_at, $user_id);
     } else {
         // insert
-        $query = "INSERT INTO user_profile
-                    (user_id, full_name, phone_number, address, gender, birth_date, updated_at)
-                  VALUES
-                    ('$user_id', '$full_name', '$phone_number', '$address', '$gender', '$birth_date', '$updated_at')";
+        $query = $conn->prepare("INSERT INTO user_profile (user_id, full_name, phone_number, address, gender, birth_date, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $query->bind_param("issssss", $user_id, $full_name, $phone_number, $address, $gender, $birth_date, $updated_at);
     }
 
-
-    if (mysqli_query($conn, $query)) {
+    if ($query->execute()) {
         header("Location: ../laman-user/user-profile.php");
         exit();
     } else {

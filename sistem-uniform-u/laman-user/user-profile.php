@@ -1,26 +1,30 @@
 <?php
 session_start();
 include '../koneksi.php';
-// Mendapatkan protocol (http/https)
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
 
-// Mendapatkan host (localhost atau domain)
-$host = $_SERVER['HTTP_HOST'];
-
-// Ubah sesuai nama folder project di htdocs
-$projectFolder = '/sistem-uniform-u';
-
-// Gabungkan jadi base URL
-$base_url = $protocol . '://' . $host . $projectFolder . '/';
+// Cek apakah user sudah login
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../laman-masuk/login.php");
+    exit();
+}
 
 $user_id = $_SESSION['user_id'];
 
+// BASE URL
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+$host = $_SERVER['HTTP_HOST'];
+$projectFolder = '/PBW-4C-SI-KELOMPOK-1/sistem-uniform-u';
+$base_url = $protocol . '://' . $host . $projectFolder . '/';
 
-// Ambil data user_profile dari database
-$sql = "SELECT * FROM user_profile WHERE user_id = '$user_id'";
-$result = mysqli_query($conn, $sql);
-$profile = mysqli_fetch_assoc($result);
+// Ambil data user_profile dari database dengan prepared statement
+$stmt = $conn->prepare("SELECT * FROM user_profile WHERE user_id = ?");
+$stmt->bind_param("s", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$profile = $result->fetch_assoc();
+$stmt->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="id">
