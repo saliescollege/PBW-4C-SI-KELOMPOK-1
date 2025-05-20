@@ -1,6 +1,18 @@
 <?php
-require '../koneksi.php';
+// koneksi database (sesuaikan)
+$host = 'localhost';
+$dbname = 'db_uniform';
+$username = 'root';
+$password = '';
 
+try {
+    $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Koneksi gagal: " . $e->getMessage());
+}
+
+// Query produk dengan total stok kurang dari 5
 $sql = "
     SELECT p.id_produk, p.nama_produk, p.kategori, p.warna, p.harga,
            SUM(IFNULL(ps.stok, 0)) AS total_stok
@@ -13,15 +25,12 @@ $sql = "
 ";
 
 $stmt = $conn->query($sql);
+$produk_reminder = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$produk_reminder = [];
-if ($stmt) {
-    while ($row = $stmt->fetch_assoc()) {
-        $produk_reminder[] = $row;
-    }
-} else {
-    echo "Query error: " . $conn->error;
-}
+$sql_jumlah_produk = "SELECT COUNT(*) as total_produk FROM produk";
+$stmt_jumlah_produk = $conn->query($sql_jumlah_produk);
+$row_jumlah_produk = $stmt_jumlah_produk->fetch(PDO::FETCH_ASSOC);
+$total_produk = $row_jumlah_produk['total_produk'];
 ?>
 
 <!DOCTYPE html>
@@ -99,7 +108,7 @@ if ($stmt) {
           </div>
           <div>
             <h6 class="mb-0">Jumlah Produk</h6>
-            <h4 class="fw-bold">48</h4>
+            <h4 class="fw-bold"><?=$total_produk ?></h4>
           </div>
         </div>
       </div>
@@ -204,7 +213,7 @@ if ($stmt) {
     }
   });
 
-  function showStock(btn, qty) {
+    function showStock(btn, qty) {
     const stockText = btn.closest('.card-body').querySelector('.stock-text');
     stockText.textContent = `Stok ukuran ${btn.innerText}: ${qty}`;
     if (qty <= 2) {
