@@ -221,11 +221,12 @@ if (!$result) {
                 $punyaUkuran = count($sizes) > 0;
             ?>
             <div class="col-md-3 mb-4 produk-item">
-                <div class="card h-100 product-card" data-product-id="<?= $id ?>">
-                   <img src="/PBW-4C-SI-2024/assets/uniform/<?= htmlspecialchars($gambar) ?>" 
-                      class="card-img-top" 
-                      alt="<?= htmlspecialchars($nama) ?>" 
-                      style="height: 200px; object-fit: contain;" />
+                  <div class="card h-100 product-card" data-product-id="<?= $id ?>">
+                
+                      <img src="../assets/uniform/<?= htmlspecialchars($gambar) ?>" 
+                          class="card-img-top" 
+                          alt="<?= htmlspecialchars($nama) ?>" 
+                          style="height: 200px; object-fit: contain;" />
 
                     <div class="card-body d-flex flex-column">
                         <span class="badge bg-info text-dark mb-2"><?= htmlspecialchars($kategori) ?></span>
@@ -279,50 +280,45 @@ if (!$result) {
   });
 
   // Fungsi showStock untuk produk dengan atau tanpa ukuran
-  function showStock(button, size = null) {
+function showStock(button, size = null) {
     const productId = button.closest('.product-card').getAttribute('data-product-id');
     const stockDiv = button.closest('.card-body').querySelector('.stock-text');
 
-    // Jika produk tanpa ukuran (ID 3 atau 4)
-      if (!size) {
-    fetch(`get_stock.php?id_produk=${productId}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.stock !== undefined) {
-          // Tampilkan stok meskipun 0
-          stockDiv.textContent = `Stok: ${data.stock}`;
-        } else if (data.error) {
-          stockDiv.textContent = `Error: ${data.error}`;
-        } else {
-          stockDiv.textContent = 'Stok: Tidak tersedia';
-        }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('Terjadi kesalahan saat mengambil stok.');
-      });
-  } else {
-      // Produk dengan ukuran (gunakan parameter size)
-      if (!size) {
-        return;
-      }
-
-      fetch(`get_stock.php?id_produk=${productId}&size=${size}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.stock !== undefined) {
-            stockDiv.textContent = `Stok: ${data.stock}`;
-          } else if (data.error) {
-            stockDiv.textContent = `Error: ${data.error}`;
-            alert(`Error: ${data.error}`);
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          alert('Terjadi kesalahan saat mengambil stok.');
-        });
+    if (!size) {
+        fetch(`get_stock.php?id_produk=${productId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.stock !== undefined) {
+                    // Tampilkan stok meskipun 0
+                    stockDiv.textContent = `Stok: ${data.stock}`;
+                } else if (data.error) {
+                    stockDiv.textContent = `Error: ${data.error}`;
+                } else {
+                    stockDiv.textContent = 'Stok: Tidak tersedia';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat mengambil stok.');
+            });
+    } else {
+        // Produk dengan ukuran (gunakan parameter size)
+        fetch(`get_stock.php?id_produk=${productId}&size=${size}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.stock !== undefined) {
+                    stockDiv.textContent = `Stok: ${data.stock}`;
+                } else if (data.error) {
+                    stockDiv.textContent = `Error: ${data.error}`;
+                    alert(`Error: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat mengambil stok.');
+            });
     }
-  }
+}
 </script>
 
 

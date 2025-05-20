@@ -40,11 +40,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $allowed = ['jpg','jpeg','png','gif'];
         if (in_array($ext, $allowed)) {
             $newName = uniqid('produk_') . '.' . $ext;
-            $uploadDir = 'uploads/';
+            $uploadDir = '../assets/uniform/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
             $uploadPath = $uploadDir . $newName;
-            if (move_uploaded_file($tmp_name, $uploadPath)) {
-                $gambar = $uploadPath;
+        if (move_uploaded_file($tmp_name, $uploadPath)) {
+              $gambar = $newName; // hanya nama file
             } else {
                 echo "<script>alert('Gagal upload gambar');</script>";
             }
