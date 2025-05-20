@@ -1,25 +1,9 @@
 <?php
 session_start();
+include '../koneksi.php';
+include '../config.php';
 
-// if (!isset($_SESSION['user_id'])) {
-//     header("Location: login.php");
-//     exit;
-// }
-
-
-// KONFIGURASI KONEKSI DATABASE
-$servername = "localhost";
-$db_username = "root";      
-$db_password = "";          
-$dbname = "db_uniform";        
-
-
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
-if ($conn->connect_error) {
-    die("Koneksi gagal: " . $conn->connect_error);
-}
-
-
+$user_id = $_GET['user_id'] ?? null;
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user_id = $_SESSION['user_id'];
     $full_name = mysqli_real_escape_string($conn, $_POST['full_name']);
@@ -48,7 +32,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                   VALUES
                     ('$user_id', '$full_name', '$phone_number', '$address', '$gender', '$birth_date', '$updated_at')";
     }
-
 
     if (mysqli_query($conn, $query)) {
         header("Location: ../laman-masuk/login.php");

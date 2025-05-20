@@ -1,14 +1,15 @@
 <?php
 session_start();
-
-require_once '../koneksi.php';
+include '../koneksi.php';
+include '../config.php';
 
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
-
+    $email = $_POST['email'] ?? '';
+    
     $query = "SELECT * FROM users WHERE username = ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("s", $username);
@@ -18,9 +19,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($result->num_rows === 1) {
     $user = $result->fetch_assoc();
 
-    if ($password === $user['password_hash']) {
+    if (password_verify($password, $user['password_hash'])) {
             $_SESSION['username'] = $user['username'];
             $_SESSION['user_id'] = $user['id'];
+            $_SESSION['email'] = $user['email'];
+
 
             header('Location: /PBW-4C-SI-KELOMPOK-1/sistem-uniform-u/laman-dashboard/dashboard.php');
             exit();
@@ -75,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         </button>
                     </form>
                     <div class="text-center mt-3">
-                        <a href="laman-masuk\reset-password.html" class="text-decoration-none">Lupa Password?</a>
+                        <a href="reset-password.php" class="text-decoration-none">Lupa Password?</a>
                     </div>
                     <div class="text-center mt-2">
                         <p>Belum punya akun? <a href="register.php" class="text-decoration-none">Daftar di sini</a></p>
