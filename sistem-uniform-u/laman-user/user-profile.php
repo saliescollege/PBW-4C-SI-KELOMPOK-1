@@ -33,26 +33,26 @@ $profile = mysqli_fetch_assoc($result);
         <div class="mb-3">
           <label for="full_name" class="form-label">Nama Lengkap</label>
           <input type="text" id="full_name" name="full_name" class="form-control" required
-            value="<?= htmlspecialchars($profile['full_name']) ?>" />
+            value="<?= htmlspecialchars($profile['full_name']) ?>" disabled/>
         </div>
 
 
         <div class="mb-3">
           <label for="phone_number" class="form-label">Nomor HP</label>
           <input type="text" id="phone_number" name="phone_number" class="form-control" required
-            value="<?= htmlspecialchars($profile['phone_number']) ?>" />
+            value="<?= htmlspecialchars($profile['phone_number']) ?>"  disabled/>
         </div>
 
 
         <div class="mb-3">
           <label for="address" class="form-label">Alamat</label>
-          <textarea id="address" name="address" class="form-control" rows="3" required><?= htmlspecialchars($profile['address']) ?></textarea>
+          <textarea id="address" name="address" class="form-control" rows="3" required  disabled><?= htmlspecialchars($profile['address']) ?></textarea>
         </div>
 
 
         <div class="mb-3">
           <label for="gender" class="form-label">Jenis Kelamin</label>
-          <select id="gender" name="gender" class="form-select" required>
+          <select id="gender" name="gender" class="form-select" required  disabled>
             <option value="">-- Pilih --</option>
             <option value="Laki-laki" <?= $profile['gender'] == 'Laki-laki' ? 'selected' : '' ?>>Laki-laki</option>
             <option value="Perempuan" <?= $profile['gender'] == 'Perempuan' ? 'selected' : '' ?>>Perempuan</option>
@@ -63,7 +63,7 @@ $profile = mysqli_fetch_assoc($result);
         <div class="mb-3">
           <label for="birth_date" class="form-label">Tanggal Lahir</label>
           <input type="date" id="birth_date" name="birth_date" class="form-control" required
-            value="<?= htmlspecialchars($profile['birth_date']) ?>" />
+            value="<?= htmlspecialchars($profile['birth_date']) ?>"  disabled/>
         </div>
 
 
@@ -92,7 +92,6 @@ $profile = mysqli_fetch_assoc($result);
       sidebar.classList.remove('collapsed');
     }
   });
-
 
   sidebar.addEventListener('mouseleave', () => {
     if (!sidebar.classList.contains('manual-toggle')) {

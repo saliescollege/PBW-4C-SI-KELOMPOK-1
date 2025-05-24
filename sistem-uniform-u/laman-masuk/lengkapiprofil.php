@@ -3,7 +3,7 @@ session_start();
 include '../koneksi.php';
 include '../config.php';
 
-$user_id = $_GET['user_id'] ?? null;
+// $user_id = $_GET['user_id'] ?? null;
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user_id = $_SESSION['user_id'];
     $full_name = mysqli_real_escape_string($conn, $_POST['full_name']);
