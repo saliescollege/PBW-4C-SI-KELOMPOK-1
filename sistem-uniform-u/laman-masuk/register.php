@@ -25,9 +25,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $stmt = $conn->prepare("INSERT INTO users (username, email, password_hash, created_at) VALUES (?, ?, ?, ?)");
         $stmt->bind_param("ssss", $username, $email, $password_hash, $created_at);
        
-        if ($stmt->execute()) {
+    if ($stmt->execute()) {
     $user_id = $conn->insert_id;
-    header("Location: lengkapiprofil.php?user_id=$user_id");
+    $_SESSION['user_id'] = $user_id; 
+    header("Location: lengkapiprofil.php");
     exit;
 }
 
@@ -72,7 +73,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             <label for="new-password" class="form-label">Password</label>
                             <input type="password" id="new-password" name="password" class="form-control" placeholder="Buat password" required>
                         </div>
-                      <button type="submit" class="btn custom-btn w-100" onclick="window.location.href='lengkapiprofil.php'">Daftar</button>
+                     <button type="submit" class="btn custom-btn w-100">Daftar</button>
 
                     </form>
                     <div class="text-center mt-3">
