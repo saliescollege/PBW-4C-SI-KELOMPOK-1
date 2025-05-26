@@ -3,12 +3,16 @@ session_start();
 include '../koneksi.php';
 include '../config.php';
 
-$user_id = $_SESSION['user_id'];
+// $user_id = $_SESSION['user_id'];
+$user_id = $_SESSION['user_id'] ?? null;
+$profile = null;
 
-// Ambil data user_profile dari database
-$sql = "SELECT * FROM user_profile WHERE user_id = '$user_id'";
-$result = mysqli_query($conn, $sql);
-$profile = mysqli_fetch_assoc($result);
+if ($user_id) {
+    // Jika user sudah login, ambil data profil
+    $sql = "SELECT * FROM user_profile WHERE user_id = '$user_id'";
+    $result = mysqli_query($conn, $sql);
+    $profile = mysqli_fetch_assoc($result);
+}
 ?>
 
 <!DOCTYPE html>
@@ -29,7 +33,7 @@ $profile = mysqli_fetch_assoc($result);
   <div class="flex-grow-1 p-4">
     <h2>Profil Anda</h2>
     <?php if ($profile): ?>
-      <form action="register.php" method="post">
+      <form id="profileForm" action="<?= $base_url ?>laman-masuk/lengkapiprofil.php" method="POST">
         <div class="mb-3">
           <label for="full_name" class="form-label">Nama Lengkap</label>
           <input type="text" id="full_name" name="full_name" class="form-control" required
@@ -65,16 +69,29 @@ $profile = mysqli_fetch_assoc($result);
           <input type="date" id="birth_date" name="birth_date" class="form-control" required
             value="<?= htmlspecialchars($profile['birth_date']) ?>"  disabled/>
         </div>
-
-
-        <a href="<?= $base_url ?>laman-masuk/login.php" class="btn btn-danger">Logout</a>
+        <div class="d-flex gap-2">
+          <button type="button" id="editBtn" class="btn btn-primary">Edit Profil</button>
+          <button type="submit" id="saveBtn" class="btn btn-success d-none">Simpan Perubahan</button>
+          <a href="<?= $base_url ?>laman-user/logout.php" class="btn btn-danger ms-auto">Logout</a>
+        </div>
       </form>
     <?php else: ?>
-      <p>Profil Anda belum lengkap. Silakan lengkapi terlebih dahulu <a href="<?= $base_url ?>laman-masuk/lengkapiprofil.php">di sini</a>.</p>
+      <p>Anda belum memiliki akun, silahkan buat akun terlebih dahulu <a href="<?= $base_url ?>laman-masuk/register.php">di sini</a>.</p>
     <?php endif; ?>
   </div>
 </div>
 
+<script>
+  const editBtn = document.getElementById('editBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const formInputs = document.querySelectorAll('#profileForm input, #profileForm textarea, #profileForm select');
+
+  editBtn.addEventListener('click', () => {
+    formInputs.forEach(input => input.disabled = false);
+    saveBtn.classList.remove('d-none');
+    editBtn.classList.add('d-none');
+  });
+</script>
 
 <script>
   const sidebar = document.getElementById('sidebar');

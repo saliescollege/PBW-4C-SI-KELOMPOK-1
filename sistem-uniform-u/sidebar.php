@@ -38,12 +38,17 @@ $email = $_SESSION['email'] ?? '';
     </ul>
 
     <!-- Profile Pengguna -->
-    <a href="<?= $base_url ?>laman-user/user-profile.php" class="sidebar-footer d-flex align-items-center border-top mt-auto py-2 px-3 text-decoration-none text-dark">
-      <img src="<?= $base_url ?>assets/PFP.png" class="rounded-circle me-2" width="32" height="32" alt="User">
-      <div class="user-info">
-        <div class="fw-semibold sidebar-text"><?= htmlspecialchars($username) ?></div>
-        <small class="text-muted sidebar-text"><?= htmlspecialchars($email) ?></small>
-      </div>
-    </a>
+<a href="<?= $base_url ?>laman-user/user-profile.php" class="sidebar-footer d-flex align-items-center border-top mt-auto py-2 px-3 text-decoration-none text-dark">
+<img src="<?= $base_url ?>assets/PFP.png" class="rounded-circle me-2" width="32" height="32" alt="User">
+  <div class="user-info">
+    <div class="fw-semibold sidebar-text">
+      <?= isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Tamu' ?>
+    </div>
+    <small class="text-muted sidebar-text">
+      <?= isset($_SESSION['email']) ? htmlspecialchars($_SESSION['email']) : '@gmail.com' ?>
+    </small>
+  </div>
+</a>
+
   </div>
 </div>

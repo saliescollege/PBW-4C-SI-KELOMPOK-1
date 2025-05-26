@@ -77,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                     </form>
                     <div class="text-center mt-3">
-                        <p>Sudah punya akun? <a onclick="window.location.href=login.php" class="text-decoration-none">Login di sini</a></p>
+                        <p>Sudah punya akun? <a href="login.php" class="text-decoration-none">Login di sini</a></p>
                     </div>
                 </div>
             </div>

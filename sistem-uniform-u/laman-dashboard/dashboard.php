@@ -50,7 +50,7 @@ $total_produk = $row_jumlah_produk['total_produk'];
 
 <!-- Main Content -->
 <div class="flex-grow-1 p-4">
-  <h2>Selamat Datang, <?= htmlspecialchars($_SESSION['username'] ?? '') ?></h2>
+ <h2>Selamat Datang, <?= isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Tamu' ?></h2>
   <hr>
 
   <!-- Row Cards -->
