@@ -15,7 +15,7 @@ try {
 
 // Query produk dengan total stok kurang dari 5
 $sql = "
-    SELECT p.id_produk, p.nama_produk, p.kategori, p.warna, p.harga,
+    SELECT p.id_produk, p.nama_produk, p.kategori, p.warna, p.harga, p.gambar_produk,
            SUM(IFNULL(ps.stok, 0)) AS total_stok
     FROM produk p
     LEFT JOIN produk_stock ps ON p.id_produk = ps.id_produk
@@ -138,7 +138,10 @@ $total_produk = $row_jumlah_produk['total_produk'];
         <?php foreach ($produk_reminder as $produk): ?>
           <div class="card product-card mb-3">
             <!-- Ganti image sesuai produk, kalau gak ada pake placeholder -->
-            <img src="../assets/uniform/default.png" class="card-img-top img-fluid" style="max-height: 200px; object-fit: contain;" alt="<?= htmlspecialchars($produk['nama_produk']) ?>">
+            <?php
+              $gambar = !empty($produk['gambar_produk']) ? "../assets/uniform/" . htmlspecialchars($produk['gambar_produk']) : "../assets/uniform/default.png";
+            ?>
+            <img src="<?= $gambar ?>" class="card-img-top img-fluid" style="max-height: 200px; object-fit: contain;" alt="<?= htmlspecialchars($produk['nama_produk']) ?>">
             <div class="card-body">
               <span class="product-tag tag-sd"><?= htmlspecialchars($produk['kategori']) ?></span>
               <div class="d-flex justify-content-between align-items-center">
