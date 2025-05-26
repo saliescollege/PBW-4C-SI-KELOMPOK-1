@@ -13,7 +13,10 @@
 
   <div class="container">
     <h2 class="mb-4">Update Stok Produk</h2>
-    
+
+    <!-- Card Form -->
+    <div class="card shadow-lg">
+      <div class="card-body">
     <form id="updateStockForm">
       <div class="mb-3">
         <label for="product" class="form-label">Pilih Produk</label>
@@ -53,7 +56,9 @@
 
       <button type="submit" class="btn btn-primary">Update Stok</button>
     </form>
-  </div>
+     </div>
+   </div>
+</div>
 
   <script>
     const productSelect = document.getElementById('product');

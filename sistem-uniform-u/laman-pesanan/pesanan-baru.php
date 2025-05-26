@@ -39,6 +39,47 @@
     .hidden {
       display: none;
     }
+
+    .container {
+      max-width: 1000px; /* Untuk Mengatur lebar maksimal card */
+      margin: auto; /*  Supaya cardnyaa tetap di tengah */
+    }
+
+    .breadcrumb-custom {
+      display: flex;
+      list-style: none;
+      padding: 8px 15px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .breadcrumb-custom li {
+      margin-right: 8px;
+      display: inline-block;
+    }
+
+    .breadcrumb-custom li:not(:last-child):not([style*="display: none"])::after {
+      content: "\203A"; /* tanda panah kecil (›) */
+      margin-left: 8px;
+      color: #6c757d;
+    }
+
+    .breadcrumb-custom li:last-child::after {
+      content: "";
+      margin: 0;
+    }
+
+    .breadcrumb-custom a {
+      text-decoration: none;
+      color:rgb(1, 1, 1);
+    }
+
+    .breadcrumb-custom .active {
+      color: #6c757d;
+      pointer-events: none;
+    }
+
   </style>
 </head>
 
@@ -48,9 +89,20 @@
     <?php include '../sidebar.php'; ?>
 
     <!-- Main Content -->
-    <div class="container">
+    <div class="container my-4">
+    <div class="card shadow-lg">
+      <div class="container">
       <h2 class="mb-4">Buat Pesanan Baru</h2>
 
+     <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+          <ul class="breadcrumb-custom" id="breadcrumb">
+            <li><a href="pesanan.php">List Pesanan</a></li>
+            <li><a href="#">Detail Pesanan</a></li>
+          </ul>
+        </nav>
+
+    <div class="card-body">
       <form>
         <!-- Informasi Umum -->
         <div class="mb-3">
@@ -140,17 +192,25 @@
       </form>
     </div>
   </div>
+</div>
+</div>
 
   <!-- JavaScript -->
   <script>
     const metodeBayarRadios = document.querySelectorAll('input[name="metodeBayar"]');
     const detailCicilanDiv = document.getElementById('detailCicilan');
+    const pembayaranBreadcrumb = document.getElementById('pembayaran');
 
     metodeBayarRadios.forEach(radio => {
       radio.addEventListener('change', () => {
-        detailCicilanDiv.classList.toggle('hidden', !document.getElementById('nyicil').checked);
+        const nyicilChecked = document.getElementById('nyicil').checked;
+        detailCicilanDiv.classList.toggle('hidden', !nyicilChecked);
+
+        // Tampilkan 'Pembayaran' jika metode dipilih
+        pembayaranBreadcrumb.style.display = 'inline';
       });
     });
+
 
     // Sidebar toggle (jika ada elemen-elemen ini di sidebar.php)
     const sidebar = document.getElementById('sidebar');
@@ -183,6 +243,20 @@
         const rowText = row.textContent.toLowerCase();
         row.style.display = rowText.includes(searchValue) ? "" : "none";
       });
+    });
+
+    // Breadcrumb otomatis berdasarkan URL
+    document.addEventListener('DOMContentLoaded', function () {
+      const url = window.location.href;
+      const pembayaranBreadcrumb = document.getElementById('pembayaran'); // id dari elemen breadcrumb 'Pembayaran'
+
+      if (url.includes('pesanan.php')) {
+        pembayaranBreadcrumb.style.display = 'none'; // Tidak tampil di list pesanan
+      } else if (url.includes('detail-pesanan.php')) {
+        pembayaranBreadcrumb.style.display = 'none'; // Tidak tampil di detail
+      } else if (url.includes('pembayaran.php')) {
+        pembayaranBreadcrumb.style.display = 'inline'; // Tampil di halaman pembayaran
+      }
     });
   </script>
 </body>

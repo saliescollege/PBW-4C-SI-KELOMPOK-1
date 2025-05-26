@@ -49,9 +49,9 @@
     <hr>
     <!-- Toolbar -->
      <div class="d-flex justify-content-between align-items-center mb-3">
-      <h6 class="mb-1">List Transaksi</h6>
+      <h5 class="mb-1">List Transaksi</h5>
       <div class="d-flex align-items-center gap-2">
-        <a href="pesanan_baru.php" class="btn btn-light border text-black">
+        <a href="pesanan-baru.php" class="btn btn-light border text-black">
           <i class="fas fa-plus me-1"></i> Tambah Pesanan
         </a>
         <div class="input-group" style="max-width: 250px;">

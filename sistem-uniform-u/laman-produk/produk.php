@@ -175,7 +175,7 @@ if (!$result) {
 
     <!-- Toolbar -->
     <div class="product-toolbar">
-      <h6 class="mb-1">List Produk</h6>
+      <h5 class="mb-1">List Produk</h5>
       <div class="d-flex align-items-center gap-2">
         <a href="add_produk.php" class="btn btn-light border text-black">
           <i class="fas fa-plus me-1"></i> Tambah Produk
@@ -240,11 +240,11 @@ if (!$result) {
                       ?>
                       <span class="badge <?= $badgeClass ?> mb-2"><?= htmlspecialchars($kategori) ?></span>
 
-                        <h5 class="card-title"><?= htmlspecialchars($nama) ?></h5>
-                        <p class="card-text mb-1">Rp <?= $harga ?></p>
+                        <h5 class="card-title text-center"><?= htmlspecialchars($nama) ?></h5>
+                        <p class="card-text mb-1 text-center">Rp <?= $harga ?></p>
 
                         <?php if ($punyaUkuran): ?>
-                            <div class="mb-2">
+                            <div class="mb-2 text-center">
                                 <?php foreach ($sizes as $data): ?>
                                     <button class="btn btn-sm btn-outline-primary me-1 mb-1" onclick="showStock(this, '<?= $data['size'] ?>')">
                                         <?= htmlspecialchars($data['size']) ?>
@@ -259,8 +259,8 @@ if (!$result) {
 
                         <!-- Tombol Edit dan Hapus -->
                         <div class="mt-auto d-flex justify-content-between">
-                            <a href="update-produk.php?id=<?= $id ?>" class="btn btn-sm btn-warning">Edit</a>
-                            <a href="hapus-produk.php?id=<?= $id ?>" class="btn btn-sm btn-warning">Hapus</a>
+                            <a href="stok.php?id=<?= $id ?>" class="btn btn-sm btn-warning">Edit</a>
+                            <a href="hapus-produk.php?id=<?= $id ?>" class="btn btn-sm btn-danger">Hapus</a>
                         </div>
                     </div>
                 </div>
