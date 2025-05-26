@@ -182,21 +182,20 @@ if (!$result) {
         </a>
         <div class="input-icon">
           <i class="fas fa-search"></i>
-          <input type="text" class="form-control" placeholder="Cari produk...">
+          <input type="text" class="form-control" placeholder="Cari produk..." id="searchInput">
         </div>
       </div>
     </div>
 
     <!-- Kategori -->
     <div class="product-categories">
-      <button class="btn btn-light border text-black">Semua Produk</button>
-      <button class="btn sd-btn">SD</button>
-      <button class="btn smp-btn">SMP</button>
-      <button class="btn sma-btn">SMA</button>
+      <button id="btn-semua" class="btn btn-light border text-black">Semua Produk</button>
+      <button id="btn-sd" class="btn sd-btn">SD</button>
+      <button id="btn-smp" class="btn smp-btn">SMP</button>
+      <button id="btn-sma" class="btn sma-btn">SMA</button>
     </div>
 
 <div class="container mt-4">
-    <h3>List Produk</h3>
     <div class="row" id="listProduk">
         <?php while ($row = mysqli_fetch_assoc($result)) : ?>
             <?php 
@@ -222,15 +221,25 @@ if (!$result) {
                 $punyaUkuran = count($sizes) > 0;
             ?>
             <div class="col-md-3 mb-4 produk-item">
-                  <div class="card h-100 product-card" data-product-id="<?= $id ?>">
-                
+                  <div class="card h-100 product-card" data-product-id="<?= $id ?>" data-kategori="<?= strtolower($kategori) ?>">
                       <img src="../assets/uniform/<?= htmlspecialchars($gambar) ?>" 
                           class="card-img-top" 
                           alt="<?= htmlspecialchars($nama) ?>" 
                           style="height: 200px; object-fit: contain;" />
 
                     <div class="card-body d-flex flex-column">
-                        <span class="badge bg-info text-dark mb-2"><?= htmlspecialchars($kategori) ?></span>
+                        <?php
+                        $badgeClass = '';
+                        if ($kategori === 'SD') {
+                            $badgeClass = 'tag-sd';
+                        } elseif ($kategori === 'SMP') {
+                            $badgeClass = 'tag-smp';
+                        } elseif ($kategori === 'SMA') {
+                            $badgeClass = 'tag-sma';
+                        }
+                      ?>
+                      <span class="badge <?= $badgeClass ?> mb-2"><?= htmlspecialchars($kategori) ?></span>
+
                         <h5 class="card-title"><?= htmlspecialchars($nama) ?></h5>
                         <p class="card-text mb-1">Rp <?= $harga ?></p>
 
@@ -320,6 +329,41 @@ function showStock(button, size = null) {
             });
     }
 }
+ function filterKategori(kategori) {
+    const produkItems = document.querySelectorAll('.produk-item');
+
+    produkItems.forEach(item => {
+      const card = item.querySelector('.product-card');
+      const kategoriProduk = card.getAttribute('data-kategori');
+
+      if (kategori === 'all' || kategoriProduk === kategori) {
+        item.style.display = 'block';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('btn-semua').addEventListener('click', () => filterKategori('all'));
+    document.getElementById('btn-sd').addEventListener('click', () => filterKategori('sd'));
+    document.getElementById('btn-smp').addEventListener('click', () => filterKategori('smp'));
+    document.getElementById('btn-sma').addEventListener('click', () => filterKategori('sma'));
+  });
+
+    document.getElementById("searchInput").addEventListener("input", function () {
+    const keyword = this.value.toLowerCase();
+    const produkItems = document.querySelectorAll(".produk-item");
+
+    produkItems.forEach(function (item) {
+      const namaProduk = item.querySelector(".card-title").textContent.toLowerCase();
+      if (namaProduk.includes(keyword)) {
+        item.style.display = "block";
+      } else {
+        item.style.display = "none";
+      }
+    });
+  });
 </script>
 
 
