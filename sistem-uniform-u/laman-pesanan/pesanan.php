@@ -1,4 +1,8 @@
-<?php session_start(); ?>
+<?php
+session_start();
+include '../koneksi.php';
+include '../config.php';
+?>
 
 <!DOCTYPE html>
 <html lang="id">
@@ -41,36 +45,34 @@
 
 <body>
   <div class="d-flex">
-  <?php include '../sidebar.php'; ?> <!--Menambahkan sidebar-->
+    <?php include '../sidebar.php'; ?>
 
-  <!-- Main Content -->
-  <div class="flex-grow-1 p-4">
-    <h1>Pesanan</h1>
-    <hr>
-    <!-- Toolbar -->
-     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-1">List Transaksi</h5>
-      <div class="d-flex align-items-center gap-2">
-        <a href="pesanan-baru.php" class="btn btn-light border text-black">
-          <i class="fas fa-plus me-1"></i> Tambah Pesanan
-        </a>
-        <div class="input-group" style="max-width: 250px;">
-          <span class="input-group-text"><i class="fas fa-search"></i></span>
-          <input type="text" id="searchInput" class="form-control" placeholder="Cari transaksi...">
+    <div class="flex-grow-1 p-4">
+      <h1>Pesanan</h1>
+      <hr>
+      <!-- Toolbar -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-1">List Pesanan</h6>
+        <div class="d-flex align-items-center gap-2">
+          <a href="pesanan-baru.php" class="btn btn-light border text-black text-nowrap">
+            <i class="fas fa-plus me-1"></i> Tambah Pesanan
+          </a>
+          <div class="input-group" style="max-width: 250px;">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input type="text" id="searchInput" class="form-control" placeholder="Cari transaksi...">
+          </div>
         </div>
       </div>
-    </div>
 
-
-    <!-- Card List Pesanan -->
-    <div class="card shadow-sm mb-4">
+      <div class="card shadow-sm mb-4">
         <div class="card-body">
           <div class="table-responsive">
             <table class="table align-middle table-bordered">
               <thead class="table-light">
                 <tr>
                   <th>ID Pesanan</th>
-                  <th>ID Pelanggan</th>
+                  <th>Nama Pelanggan</th>
+                  <th>Institusi</th>
                   <th>Tanggal Pesanan</th>
                   <th>Total Harga</th>
                   <th>Status Pembayaran</th>
@@ -78,106 +80,44 @@
                 </tr>
               </thead>
               <tbody>
+                <?php
+                $sql = "SELECT * FROM pesanan ORDER BY tanggal_pesanan DESC";
+                $result = mysqli_query($conn, $sql);
+                if ($result && mysqli_num_rows($result) > 0):
+                  while ($row = mysqli_fetch_assoc($result)):
+                ?>
                 <tr>
-                  <td>#ORD001</td>
-                  <td>#CUST123</td>
-                  <td>01/04/2025</td>
-                  <td>IDR 245,000</td>
+                  <td><?= htmlspecialchars($row['id_pesanan']) ?></td>
+                  <td><?= htmlspecialchars($row['nama_pelanggan']) ?></td>
+                  <td><?= htmlspecialchars($row['institusi']) ?></td>
+                  <td><?= htmlspecialchars($row['tanggal_pesanan']) ?></td>
+                  <td>Rp <?= number_format($row['total_harga'], 0, ',', '.') ?></td>
                   <td>
-                    <span class="status-badge text-success border border-success bg-light">
-                      <i class="fas fa-check-circle"></i> Lunas
+                    <span class="status-badge bg-light-pink">
+                      <?= htmlspecialchars($row['status_pembayaran']) ?>
                     </span>
                   </td>
                   <td>
-                    <button class="btn btn-full" title="Lihat Detail"><i class="fas fa-receipt"></i></button>
+                    <a href="detail_pesanan.php?id=<?= $row['id_pesanan'] ?>" class="btn btn-sm btn-primary">Detail</a>
+                    <a href="hapus_pesanan.php?id=<?= $row['id_pesanan'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus pesanan?')">Hapus</a>
                   </td>
                 </tr>
+                <?php endwhile; else: ?>
                 <tr>
-                  <td>#ORD002</td>
-                  <td>#CUST124</td>
-                  <td>01/04/2025</td>
-                  <td>IDR 180,000</td>
-                  <td>
-                    <span class="status-badge text-danger border border-danger bg-light-pink">
-                      <i class="fas fa-times-circle"></i> Belum Lunas
-                    </span>
-                  </td>
-                  <td>
-                    <button class="btn btn-full" title="Lihat Detail"><i class="fas fa-receipt"></i></button>
-                  </td>
+                  <td colspan="7" class="text-center text-muted">Belum ada pesanan.</td>
                 </tr>
-                <tr>
-                  <td>#ORD003</td>
-                  <td>#CUST125</td>
-                  <td>31/03/2025</td>
-                  <td>IDR 300,000</td>
-                  <td>
-                    <span class="status-badge text-success border border-success bg-light">
-                      <i class="fas fa-check-circle"></i> Lunas
-                    </span>
-                  </td>
-                  <td>
-                    <button class="btn btn-full" title="Lihat Detail"><i class="fas fa-receipt"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>#ORD004</td>
-                  <td>#CUST126</td>
-                  <td>30/03/2025</td>
-                  <td>IDR 220,000</td>
-                  <td>
-                    <span class="status-badge text-danger border border-danger bg-light-pink">
-                      <i class="fas fa-times-circle"></i> Belum Lunas
-                    </span>
-                  </td>
-                  <td>
-                    <button class="btn btn-full" title="Lihat Detail"><i class="fas fa-receipt"></i></button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>#ORD005</td>
-                  <td>#CUST127</td>
-                  <td>29/03/2025</td>
-                  <td>IDR 400,000</td>
-                  <td>
-                    <span class="status-badge text-success border border-success bg-light">
-                      <i class="fas fa-check-circle"></i> Lunas
-                    </span>
-                  </td>
-                  <td>
-                    <button class="btn btn-full" title="Lihat Detail"><i class="fas fa-receipt"></i></button>
-                  </td>
-                </tr>
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
         </div>
       </div>
-      
+    </div>
+  </div>
 
-<!-- JavaScript -->
 <script>
-    const sidebar = document.getElementById('sidebar');
-    const toggleBtn = document.getElementById('toggleSidebar');
-    const logo = document.getElementById('sidebarLogo');
-  
-    toggleBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('collapsed');
-    });
-  
-    sidebar.addEventListener('mouseenter', () => {
-      if (sidebar.classList.contains('collapsed')) {
-        sidebar.classList.remove('collapsed');
-      }
-    });
-  
-    sidebar.addEventListener('mouseleave', () => {
-      if (!sidebar.classList.contains('manual-toggle')) {
-        sidebar.classList.add('collapsed');
-      }
-    });
-    
-    document.getElementById("searchInput").addEventListener("keyup", function() {
+  // Fitur pencarian
+  document.getElementById("searchInput").addEventListener("keyup", function() {
     const searchValue = this.value.toLowerCase();
     const rows = document.querySelectorAll("table tbody tr");
 
@@ -185,7 +125,13 @@
       const rowText = row.textContent.toLowerCase();
       row.style.display = rowText.includes(searchValue) ? "" : "none";
     });
-    });
-  </script>
+  });
+</script>
 </body>
 </html>
+
+<?php
+// Alter table query to modify id_pesanan column
+$alterSql = "ALTER TABLE pesanan MODIFY id_pesanan INT AUTO_INCREMENT PRIMARY KEY";
+mysqli_query($conn, $alterSql);
+?>
