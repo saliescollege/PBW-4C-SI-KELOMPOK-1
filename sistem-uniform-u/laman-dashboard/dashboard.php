@@ -13,7 +13,7 @@ try {
     die("Koneksi gagal: " . $e->getMessage());
 }
 
-// Query produk dengan total stok kurang dari 5
+// Query produk dengan total stok
 $sql = "
     SELECT p.id_produk, p.nama_produk, p.kategori, p.warna, p.harga, p.gambar_produk,
            SUM(IFNULL(ps.stok, 0)) AS total_stok
@@ -41,6 +41,23 @@ $total_pendapatan = $conn->query($sql_total_pendapatan)->fetch(PDO::FETCH_ASSOC)
 
 $sql_total_pelanggan = "SELECT COUNT(DISTINCT id_pelanggan) AS total_pelanggan FROM pesanan";
 $total_pelanggan = $conn->query($sql_total_pelanggan)->fetch(PDO::FETCH_ASSOC)['total_pelanggan'];
+
+// Ambil data penjualan harian untuk grafik
+$sql_penjualan = "
+    SELECT DATE(tanggal_pesanan) as tanggal, COUNT(*) as jumlah
+    FROM pesanan
+    GROUP BY DATE(tanggal_pesanan)
+    ORDER BY tanggal ASC
+";
+$stmt_penjualan = $conn->query($sql_penjualan);
+$penjualan = $stmt_penjualan->fetchAll(PDO::FETCH_ASSOC);
+
+$tanggal_array = [];
+$jumlah_array = [];
+foreach ($penjualan as $row) {
+    $tanggal_array[] = $row['tanggal'];
+    $jumlah_array[] = $row['jumlah'];
+}
 
 ?>
 
@@ -201,14 +218,17 @@ $total_pelanggan = $conn->query($sql_total_pelanggan)->fetch(PDO::FETCH_ASSOC)['
 <!-- Visualisasi Chart -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+  const labels = <?= json_encode($tanggal_array) ?>;
+  const data = <?= json_encode($jumlah_array) ?>;
+
   const ctx = document.getElementById('salesChart').getContext('2d');
   const salesChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
+      labels: labels,
       datasets: [{
-        label: 'Penjualan',
-        data: [5, 12, 9, 14, 8, 15],
+        label: 'Jumlah Penjualan per Tanggal',
+        data: data,
         backgroundColor: 'rgba(13, 110, 253, 0.2)',
         borderColor: 'rgba(13, 110, 253, 1)',
         borderWidth: 2,
