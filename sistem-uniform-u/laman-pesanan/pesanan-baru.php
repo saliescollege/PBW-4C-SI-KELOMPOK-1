@@ -151,6 +151,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       height: 38px !important;
       right: 10px;
     }
+    .breadcrumb-custom {
+      display: flex;
+      list-style: none;
+      padding: 8px 15px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+    .breadcrumb-custom li {
+      margin-right: 8px;
+    }
+    .breadcrumb-custom li:not(:last-child)::after {
+      content: "\203A";
+      margin-left: 8px;
+      color: #6c757d;
+    }
+    .breadcrumb-custom li:last-child::after {
+      content: "";
+      margin: 0;
+    }
+    .breadcrumb-custom a {
+      text-decoration: none;
+      color: #212529;
+    }
+    .breadcrumb-custom .active {
+      color: #6c757d;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -162,10 +191,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <!-- Breadcrumb: List Pesanan > Pesanan Baru -->
       <div class="transaction-toolbar mb-3">
         <nav aria-label="breadcrumb">
-          <ol class="breadcrumb mb-1">
-            <li class="breadcrumb-item"><a href="pesanan.php">List Pesanan</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Pesanan Baru</li>
-          </ol>
+          <ul class="breadcrumb-custom">
+            <li><a href="pesanan.php">List Pesanan</a></li>
+            <li class="active">Pesanan Baru</li>
+          </ul>
         </nav>
       </div>
       <div class="card shadow-sm mb-4 w-100">
@@ -192,7 +221,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="mb-3">
               <label class="form-label">Produk yang Dipesan</label>
               <div id="produkInputs"></div>
-              <button type="button" class="btn btn-outline-primary rounded w-100 mt-2" id="tambahProdukBtn">
+              <button type="button" class="btn btn-light border text-black text-nowrap rounded w-100 mt-2" id="tambahProdukBtn">
                 <i class="fas fa-plus"></i> Tambah Produk
               </button>
             </div>
@@ -200,7 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- Tombol Submit -->
             <div class="d-grid">
               <input type="hidden" name="produkListPesanan" id="produkListPesananInput">
-              <button type="submit" class="btn btn-success">Lanjut ke Pembayaran</button>
+              <button type="submit" class="btn btn-success">Lanjut</button>
             </div>
           </form>
         </div>

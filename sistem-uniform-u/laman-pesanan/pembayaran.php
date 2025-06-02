@@ -28,6 +28,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['produkListPesanan']))
   @media (max-width: 600px) {
     .main-card { max-width: 100%; }
   }
+
+  .breadcrumb-custom {
+    display: flex;
+    list-style: none;
+    padding: 8px 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+  }
+  .breadcrumb-custom li {
+    margin-right: 8px;
+  }
+  .breadcrumb-custom li:not(:last-child)::after {
+    content: "\203A";
+    margin-left: 8px;
+    color: #6c757d;
+  }
+  .breadcrumb-custom li:last-child::after {
+    content: "";
+    margin: 0;
+  }
+  .breadcrumb-custom a {
+    text-decoration: none;
+    color: #212529;
+  }
+  .breadcrumb-custom .active {
+    color: #6c757d;
+    pointer-events: none;
+  }
   </style>
 </head>
 <body>
@@ -39,11 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['produkListPesanan']))
       <!-- Breadcrumb: List Transaksi > Detail Transaksi > Pembayaran -->
       <div class="transaction-toolbar mb-3">
         <nav aria-label="breadcrumb">
-          <ol class="breadcrumb mb-1">
-            <li class="breadcrumb-item"><a href="pesanan.php">List Transaksi</a></li>
-            <li class="breadcrumb-item"><a href="pesanan-baru.php">Pesanan-Baru</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Pembayaran</li>
-          </ol>
+          <ul class="breadcrumb-custom">
+            <li><a href="pesanan.php">List Pesanan</a></li>
+            <li><a href="pesanan-baru.php">Pesanan Baru</a></li>
+            <li class="active">Pembayaran</li>
+          </ul>
         </nav>
       </div>
 

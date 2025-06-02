@@ -181,6 +181,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['namaPelanggan'])) {
       background: #f1f3f4 !important;
       transition: background 0.2s;
     }
+
+    .breadcrumb-custom {
+      display: flex;
+      list-style: none;
+      padding: 8px 15px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+    .breadcrumb-custom li {
+      margin-right: 8px;
+    }
+    .breadcrumb-custom li:not(:last-child)::after {
+      content: "\203A";
+      margin-left: 8px;
+      color: #6c757d;
+    }
+    .breadcrumb-custom li:last-child::after {
+      content: "";
+      margin: 0;
+    }
+    .breadcrumb-custom a {
+      text-decoration: none;
+      color: #212529;
+    }
+    .breadcrumb-custom .active {
+      color: #6c757d;
+      pointer-events: none;
+    }
   </style>
 
 </head>
@@ -192,9 +222,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['namaPelanggan'])) {
     <div class="flex-grow-1 p-4">
       <h1>Pesanan</h1>
       <hr>
-      <!-- Toolbar -->
+      <!-- Breadcrumb: List Pesanan -->
+      <nav aria-label="breadcrumb">
+        <ul class="breadcrumb-custom">
+          <li><a href="pesanan.php">List Pesanan</a></li>
+        </ul>
+      </nav>
+
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h6 class="mb-1">List Pesanan</h6>
+        <div></div>
         <div class="d-flex align-items-center gap-2">
           <a href="pesanan-baru.php" class="btn btn-light border text-black text-nowrap">
             <i class="fas fa-plus me-1"></i> Tambah Pesanan
@@ -218,7 +254,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['namaPelanggan'])) {
                   <th>Tanggal Pesanan</th>
                   <th>Total Harga</th>
                   <th>Status Pembayaran</th>
-                  <th>Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -258,16 +293,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['namaPelanggan'])) {
                       </span>
                     <?php endif; ?>
                   </td>
-                  <td>
-                    <a href="detail-pesanan.php?id=<?= $row['id_pesanan'] ?>" class="btn btn-sm btn-primary">Detail</a>
-                    <button class="btn btn-danger btn-sm btn-hapus-pesanan" data-id="<?= $row['id_pesanan'] ?>">
-                      <i class="fas fa-trash"></i> Hapus
-                    </button>
-                  </td>
                 </tr>
                 <?php endwhile; else: ?>
                 <tr>
-                  <td colspan="7" class="text-center text-muted">Belum ada pesanan.</td>
+                  <td colspan="6" class="text-center text-muted">Belum ada pesanan.</td>
                 </tr>
                 <?php endif; ?>
               </tbody>

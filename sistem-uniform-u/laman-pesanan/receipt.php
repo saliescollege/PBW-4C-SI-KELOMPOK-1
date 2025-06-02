@@ -28,21 +28,12 @@ while ($row = mysqli_fetch_assoc($res_detail)) {
     $detail[] = $row;
 }
 
-// Proses simpan data pesanan baru
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Ambil data dari form
-    $id_produk = isset($_POST['id_produk']) ? intval($_POST['id_produk']) : 0;
-    $id_stock = isset($_POST['id_stock']) ? intval($_POST['id_stock']) : 0;
-    $jumlah = isset($_POST['jumlah']) ? intval($_POST['jumlah']) : 0;
-    $subtotal = isset($_POST['subtotal']) ? floatval($_POST['subtotal']) : 0;
 
-    // Siapkan dan eksekusi query
-    $stmt = $conn->prepare("INSERT INTO detail_pesanan (id_pesanan, id_produk, id_stock, jumlah, subtotal) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("iiiid", $id_pesanan, $id_produk, $id_stock, $jumlah, $subtotal);
-    $stmt->execute();
 
-    // Redirect atau tampilkan pesan sukses
-    header("Location: faktur.php?id=" . $id_pesanan);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id_pesanan) {
+    $conn->query("UPDATE pesanan SET status='Sudah Lunas' WHERE id_pesanan=$id_pesanan");
+    $conn->query("UPDATE pembayaran SET jumlah_bayar=total_harga WHERE id_pesanan=$id_pesanan");
+    header("Location: pesanan.php");
     exit;
 }
 ?>
@@ -65,12 +56,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <hr>
             <div class="transaction-toolbar mb-3">
               <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-1">
-                  <li class="breadcrumb-item"><a href="pesanan.php">List Pesanan</a></li>
-                  <li class="breadcrumb-item active" aria-current="page">Detail Pesanan</li>
-                </ol>
+                <ul class="breadcrumb-custom">
+                  <li><a href="pesanan.php">List Pesanan</a></li>
+                  <li class="active">Detail Pesanan</li>
+                </ul>
               </nav>
             </div>
+
+            <div class="d-flex justify-content-end align-items-center gap-2 mt-4 mb-2">
+              <button id="btn-unduh-pdf" class="btn btn-light border text-black text-nowrap" style="background-color:#ffe6e6; color:#d63384; border:1px solid #d63384;">
+                <i class="fas fa-file-pdf me-1"></i> Unduh PDF
+              </button>
+              <button id="btn-hapus-pesanan" class="btn btn-light border text-black text-nowrap" data-id="<?= htmlspecialchars($data['id_pesanan']) ?>">
+                <i class="fas fa-trash me-1"></i> Hapus Pesanan
+              </button>
+            </div>
+
 
             <!-- Receipt Card -->
             <div class="card shadow-sm p-4 mt-4">
@@ -123,12 +124,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </tr>
                   </tfoot>
                 </table>
-                <!-- Hapus bagian jumlah bayar dan kembalian -->
-                <div class="text-end mt-4">
-                  <button class="btn btn-outline-secondary" onclick="window.print()">
-                    <i class="fas fa-print me-1"></i> Cetak Faktur
-                  </button>
-                </div>
+
+                <?php if (strtolower(trim($data['status'])) === 'dicicil'): ?>
+                  <?php
+                    $dp = round($data['total_harga'] * 0.5);
+                    $sisa = $data['total_harga'] - $dp;
+                  ?>
+                  <table class="table table-bordered table-sm w-auto mb-3 mx-auto" style="max-width:350px;">
+                    <tbody>
+                      <tr>
+                        <th class="bg-light">Nominal DP (50%)</th>
+                        <td>Rp <?= number_format($dp, 0, ',', '.') ?></td>
+                      </tr>
+                      <tr>
+                        <th class="bg-light">Sisa Cicilan</th>
+                        <td>Rp <?= number_format($sisa, 0, ',', '.') ?></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div class="text-center mb-3">
+                    <form method="post" style="display:inline;">
+                      <input type="hidden" name="aksi_lunasi" value="1">
+                      <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Tandai Sudah Lunas
+                      </button>
+                    </form>
+                  </div>
+                <?php endif; ?>
             </div>
             <pre>
 </pre>
@@ -153,6 +175,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         background-color: #b6fcb6 !important;
         color: #198754 !important;
       }
+      .breadcrumb-custom {
+        display: flex;
+        list-style: none;
+        padding: 8px 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+      }
+      .breadcrumb-custom li {
+        margin-right: 8px;
+      }
+      .breadcrumb-custom li:not(:last-child)::after {
+        content: "\203A";
+        margin-left: 8px;
+        color: #6c757d;
+      }
+      .breadcrumb-custom li:last-child::after {
+        content: "";
+        margin: 0;
+      }
+      .breadcrumb-custom a {
+        text-decoration: none;
+        color: #212529;
+      }
+      .breadcrumb-custom .active {
+        color: #6c757d;
+        pointer-events: none;
+      }
 
       @media print {
         body * {
@@ -172,5 +223,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
       }
     </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+    $('#btn-hapus-pesanan').on('click', function() {
+      if (confirm('Yakin ingin menghapus pesanan ini?')) {
+        var id = $(this).data('id');
+        $.post('hapus-pesanan.php', {id: id}, function(res) {
+          if (res.trim() === 'ok') {
+            alert('Pesanan berhasil dihapus!');
+            window.location.href = 'pesanan.php';
+          } else {
+            alert('Gagal menghapus pesanan!');
+          }
+        });
+      }
+    });
+
+    $('#btn-unduh-pdf').on('click', function() {
+      var element = document.querySelector('.card.shadow-sm');
+      html2pdf().from(element).set({
+        margin: 10,
+        filename: 'Pesanan_<?= htmlspecialchars($data['id_pesanan']) ?>.pdf',
+        html2canvas: { scale: 2 },
+        jsPDF: {orientation: 'portrait', unit: 'mm', format: 'a4'}
+      }).save();
+    });
+    </script>
 </body>
 </html>
