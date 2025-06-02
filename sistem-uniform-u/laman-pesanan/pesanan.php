@@ -2,6 +2,122 @@
 session_start();
 include '../koneksi.php';
 include '../config.php';
+
+// Proses simpan pesanan baru jika ada POST dari pembayaran.php
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['namaPelanggan'])) {
+    $nama_pelanggan = $_POST['namaPelanggan'];
+    $no_telepon = $_POST['nomorTelepon'] ?? '';
+    $sekolah = $_POST['sekolah'] ?? '';
+    $alamat_sekolah = $_POST['alamatSekolah'] ?? '';
+    $produkListPesanan = json_decode($_POST['produkListPesanan'], true);
+    $total_harga = $_POST['total_harga'] ?? 0;
+    $jenis_pembayaran = $_POST['jenisPembayaran'] ?? 'lunas';
+    $nominal_dp = $_POST['nominalDp'] ?? 0;
+    $sisa_bayar = $_POST['sisaBayar'] ?? 0;
+    $metode_bayar = $_POST['metodeBayar'] ?? '';
+    $tanggal_pesanan = date('Y-m-d H:i:s');
+    $status = ($jenis_pembayaran === 'lunas') ? 'Sudah Lunas' : 'Dicicil';
+
+    // 1. Cek/insert pelanggan
+    $stmt = $conn->prepare("SELECT id_pelanggan FROM pelanggan WHERE nama_pelanggan=? AND no_telepon=? AND sekolah=? AND alamat_sekolah=?");
+    if (!$stmt) die("Prepare failed (SELECT pelanggan): " . $conn->error);
+    $stmt->bind_param("ssss", $nama_pelanggan, $no_telepon, $sekolah, $alamat_sekolah);
+    $stmt->execute();
+    $stmt->bind_result($id_pelanggan);
+    if ($stmt->fetch()) {
+        $stmt->close();
+    } else {
+        $stmt->close();
+        $stmt = $conn->prepare("INSERT INTO pelanggan (nama_pelanggan, no_telepon, sekolah, alamat_sekolah) VALUES (?, ?, ?, ?)");
+        if (!$stmt) die("Prepare failed (INSERT pelanggan): " . $conn->error);
+        $stmt->bind_param("ssss", $nama_pelanggan, $no_telepon, $sekolah, $alamat_sekolah);
+        $stmt->execute();
+        $id_pelanggan = $stmt->insert_id;
+        $stmt->close();
+    }
+
+    // 2. Simpan pesanan (tanpa metode_bayar dan tanpa catatan)
+    $stmt = $conn->prepare("INSERT INTO pesanan (id_pelanggan, tanggal_pesanan, total_harga, status) VALUES (?, ?, ?, ?)");
+    if (!$stmt) die("Prepare failed (INSERT pesanan): " . $conn->error);
+    $stmt->bind_param("isds", $id_pelanggan, $tanggal_pesanan, $total_harga, $status);
+    $stmt->execute();
+    $id_pesanan = $stmt->insert_id;
+    $stmt->close();
+
+
+    // Simpan pembayaran
+    $stmt = $conn->prepare("INSERT INTO pembayaran (id_pesanan, metode_pembayaran, jumlah_bayar, tanggal_bayar) VALUES (?, ?, ?, ?)");
+    if (!$stmt) die("Prepare failed (INSERT pembayaran): " . $conn->error);
+    $jumlah_bayar = ($jenis_pembayaran === 'nyicil') ? $nominal_dp : $total_harga;
+    $tanggal_bayar = date('Y-m-d H:i:s');
+    $stmt->bind_param("isds", $id_pesanan, $metode_bayar, $jumlah_bayar, $tanggal_bayar);
+    $stmt->execute();
+    $stmt->close();
+
+    // Setelah $id_pesanan = $stmt->insert_id; $stmt->close();
+
+    if (is_array($produkListPesanan)) {
+        foreach ($produkListPesanan as $item) {
+            $id_produk = $item['id'] ?? 0;
+            $size = $item['size'] ?? '';
+            $jumlah = $item['jumlah'] ?? 0;
+            $harga = $item['harga'] ?? 0;
+            $subtotal = $harga * $jumlah;
+
+            // Ambil id_stock dari produk_stock berdasarkan id_produk dan size
+            $id_stock = 0;
+            if ($size !== '') {
+                $stmt = $conn->prepare("SELECT id FROM produk_stock WHERE id_produk = ? AND size = ?");
+                $stmt->bind_param("is", $id_produk, $size);
+                $stmt->execute();
+                $stmt->bind_result($id_stock);
+                if (!$stmt->fetch()) {
+                    $id_stock = null;
+                }
+                $stmt->close();
+            }
+
+            $stmt = $conn->prepare("INSERT INTO detail_pesanan (id_pesanan, id_produk, id_stock, jumlah, subtotal) VALUES (?, ?, ?, ?, ?)");
+            $stmt->bind_param("iiiid", $id_pesanan, $id_produk, $id_stock, $jumlah, $subtotal);
+            $stmt->execute();
+            $stmt->close();
+        }
+    }
+
+    // Kurangi stok di produk_stock
+    if (is_array($produkListPesanan)) {
+        foreach ($produkListPesanan as $item) {
+            $id_produk = $item['id'] ?? 0;
+            $size = $item['size'] ?? '';
+            $jumlah = $item['jumlah'] ?? 0;
+
+            // Ambil id_stock dari produk_stock berdasarkan id_produk dan size
+            $id_stock = 0;
+            if ($size !== '') {
+                $stmt = $conn->prepare("SELECT id FROM produk_stock WHERE id_produk = ? AND size = ?");
+                $stmt->bind_param("is", $id_produk, $size);
+                $stmt->execute();
+                $stmt->bind_result($id_stock);
+                if (!$stmt->fetch()) {
+                    $id_stock = null;
+                }
+                $stmt->close();
+            }
+
+            // Kurangi stok di produk_stock
+            if ($id_stock) {
+                $stmt = $conn->prepare("UPDATE produk_stock SET stok = stok - ? WHERE id = ?");
+                $stmt->bind_param("ii", $jumlah, $id_stock);
+                $stmt->execute();
+                $stmt->close();
+            }
+        }
+    }
+
+    // Redirect agar tidak resubmit saat refresh
+    header("Location: pesanan.php");
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -26,7 +142,8 @@ include '../config.php';
     }
   
     .bg-light-pink {
-      background-color: #ffe6e6 !important;
+      background-color: #ffe6e6 !important; /* Pink muda untuk cicil */
+      color: #d63384 !important;
     }
   
     .btn-full {
@@ -38,6 +155,31 @@ include '../config.php';
     .btn-full:hover {
       background-color: #5a6268;
       color: white;
+    }
+
+    .status-badge.bg-success {
+      background-color: #198754 !important;
+      color: #fff !important;
+    }
+
+    .status-badge.bg-bright-green {
+      background-color: #b6fcb6 !important; /* Hijau muda untuk lunas */
+      color: #198754 !important;
+    }
+
+    /* Efek hover pada baris pesanan */
+    .row-pesanan {
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .row-pesanan:hover {
+      background:rgba(241, 243, 244, 0.63) !important;
+    }
+
+    .row-pesanan:hover > td,
+    .row-pesanan:hover > th {
+      background: #f1f3f4 !important;
+      transition: background 0.2s;
     }
   </style>
 
@@ -81,25 +223,46 @@ include '../config.php';
               </thead>
               <tbody>
                 <?php
-                $sql = "SELECT * FROM pesanan ORDER BY tanggal_pesanan DESC";
+                $sql = "SELECT 
+                            p.id_pesanan, 
+                            pel.nama_pelanggan, 
+                            pel.sekolah, 
+                            p.tanggal_pesanan, 
+                            p.total_harga, 
+                            p.status
+                        FROM pesanan p
+                        JOIN pelanggan pel ON p.id_pelanggan = pel.id_pelanggan
+                        ORDER BY p.tanggal_pesanan DESC";
                 $result = mysqli_query($conn, $sql);
                 if ($result && mysqli_num_rows($result) > 0):
                   while ($row = mysqli_fetch_assoc($result)):
                 ?>
-                <tr>
+                <tr class="row-pesanan" data-id="<?= $row['id_pesanan'] ?>">
                   <td><?= htmlspecialchars($row['id_pesanan']) ?></td>
                   <td><?= htmlspecialchars($row['nama_pelanggan']) ?></td>
-                  <td><?= htmlspecialchars($row['institusi']) ?></td>
+                  <td><?= htmlspecialchars($row['sekolah']) ?></td>
                   <td><?= htmlspecialchars($row['tanggal_pesanan']) ?></td>
                   <td>Rp <?= number_format($row['total_harga'], 0, ',', '.') ?></td>
                   <td>
-                    <span class="status-badge bg-light-pink">
-                      <?= htmlspecialchars($row['status_pembayaran']) ?>
-                    </span>
+                    <?php if (strtolower(trim($row['status'])) === 'sudah lunas'): ?>
+                      <span class="status-badge bg-bright-green text-white">
+                        <?= htmlspecialchars($row['status']) ?>
+                      </span>
+                    <?php elseif (strtolower(trim($row['status'])) === 'dicicil'): ?>
+                      <span class="status-badge bg-light-pink text-dark">
+                        <?= htmlspecialchars($row['status']) ?>
+                      </span>
+                    <?php else: ?>
+                      <span class="status-badge bg-secondary text-white">
+                        <?= htmlspecialchars($row['status']) ?>
+                      </span>
+                    <?php endif; ?>
                   </td>
                   <td>
-                    <a href="detail_pesanan.php?id=<?= $row['id_pesanan'] ?>" class="btn btn-sm btn-primary">Detail</a>
-                    <a href="hapus_pesanan.php?id=<?= $row['id_pesanan'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin hapus pesanan?')">Hapus</a>
+                    <a href="detail-pesanan.php?id=<?= $row['id_pesanan'] ?>" class="btn btn-sm btn-primary">Detail</a>
+                    <button class="btn btn-danger btn-sm btn-hapus-pesanan" data-id="<?= $row['id_pesanan'] ?>">
+                      <i class="fas fa-trash"></i> Hapus
+                    </button>
                   </td>
                 </tr>
                 <?php endwhile; else: ?>
@@ -115,6 +278,7 @@ include '../config.php';
     </div>
   </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
   // Fitur pencarian
   document.getElementById("searchInput").addEventListener("keyup", function() {
@@ -126,6 +290,30 @@ include '../config.php';
       row.style.display = rowText.includes(searchValue) ? "" : "none";
     });
   });
+
+  // Konfirmasi hapus pesanan
+  $(document).on('click', '.btn-hapus-pesanan', function() {
+    if (confirm('Yakin ingin menghapus pesanan ini?')) {
+        var id = $(this).data('id');
+        var row = $(this).closest('tr');
+        $.post('hapus-pesanan.php', {id: id}, function(res) {
+            if (res.trim() === 'ok') {
+                row.fadeOut(300, function() { $(this).remove(); });
+            } else {
+                alert('Gagal menghapus pesanan!');
+            }
+        });
+    }
+});
+
+// Klik baris pesanan untuk redirect ke faktur/detail
+$(document).on('click', '.row-pesanan', function(e) {
+    // Cegah redirect jika klik pada tombol aksi
+    if ($(e.target).closest('a,button').length === 0) {
+        var id = $(this).data('id');
+        window.location.href = 'receipt.php?id=' + id;
+    }
+});
 </script>
 </body>
 </html>
@@ -134,4 +322,7 @@ include '../config.php';
 // Alter table query to modify id_pesanan column
 $alterSql = "ALTER TABLE pesanan MODIFY id_pesanan INT AUTO_INCREMENT PRIMARY KEY";
 mysqli_query($conn, $alterSql);
+
+// Debug POST
+echo '<pre>'; print_r($produkListPesanan); echo '</pre>'; exit;
 ?>

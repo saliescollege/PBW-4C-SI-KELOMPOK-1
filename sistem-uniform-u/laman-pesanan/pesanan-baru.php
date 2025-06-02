@@ -1,10 +1,10 @@
-?php
+<?php
 session_start();
 include '../koneksi.php';
 
 // Ambil semua produk
 $produkList = [];
-$sql = "SELECT p.id_produk, p.nama_produk, p.kategori, p.harga FROM produk p"; // tambahkan p.harga
+$sql = "SELECT p.id_produk, p.nama_produk, p.kategori, p.harga FROM produk p";
 $res = $conn->query($sql);
 while ($row = $res->fetch_assoc()) {
     $produkList[] = $row;
@@ -12,35 +12,88 @@ while ($row = $res->fetch_assoc()) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nama_pelanggan = $_POST['namaPelanggan'] ?? '';
-    $nomor_telepon = $_POST['nomorTelepon'] ?? '';
+    $no_telepon = $_POST['nomorTelepon'] ?? '';
     $sekolah = $_POST['sekolah'] ?? '';
     $alamat_sekolah = $_POST['alamatSekolah'] ?? '';
     $metode_bayar = $_POST['metodeBayar'] ?? '';
-    $tanggal_pesanan = date('Y-m-d');
-    $total_harga = 0; // Hitung sesuai kebutuhan
-    $status_pembayaran = ($metode_bayar === 'lunas') ? 'Lunas' : 'Belum Lunas';
+    $tanggal_pesanan = date('Y-m-d H:i:s');
 
-    $stmt = $conn->prepare("INSERT INTO pesanan (nama_pelanggan, nomor_telepon, sekolah, alamat_sekolah, metode_bayar, tanggal_pesanan, total_harga, status_pembayaran) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssssis", $nama_pelanggan, $nomor_telepon, $sekolah, $alamat_sekolah, $metode_bayar, $tanggal_pesanan, $total_harga, $status_pembayaran);
+    // Status pesanan sesuai enum di db_uniform
+    $status = ($metode_bayar === 'lunas') ? 'Sudah Lunas' : 'Dicicil';
+
+    // 1. Cek/insert pelanggan
+    $stmt = $conn->prepare("SELECT id_pelanggan FROM pelanggan WHERE nama_pelanggan=? AND no_telepon=? AND sekolah=? AND alamat_sekolah=?");
+    if (!$stmt) die("Prepare failed (pelanggan SELECT): " . $conn->error);
+    $stmt->bind_param("ssss", $nama_pelanggan, $no_telepon, $sekolah, $alamat_sekolah);
     $stmt->execute();
-
-    // Setelah insert pesanan, update stok produk
-    $jumlah = $_POST['jumlah'] ?? 0;
-    $produk_id = $_POST['produk_id'] ?? 0;
-    $variasi = $_POST['variasi'] ?? '';
-
-    if ($jumlah > 0 && $produk_id) {
-        if ($variasi) {
-            $stmt = $conn->prepare("UPDATE product_stock SET stok = stok - ? WHERE id_produk = ? AND size = ?");
-            $stmt->bind_param("iis", $jumlah, $produk_id, $variasi);
-        } else {
-            $stmt = $conn->prepare("UPDATE product_stock SET stok = stok - ? WHERE id_produk = ? AND (size IS NULL OR size = '')");
-            $stmt->bind_param("ii", $jumlah, $produk_id);
-        }
+    $stmt->bind_result($id_pelanggan);
+    if ($stmt->fetch()) {
+        $stmt->close();
+    } else {
+        $stmt->close();
+        $stmt = $conn->prepare("INSERT INTO pelanggan (nama_pelanggan, no_telepon, sekolah, alamat_sekolah) VALUES (?, ?, ?, ?)");
+        if (!$stmt) die("Prepare failed (pelanggan INSERT): " . $conn->error);
+        $stmt->bind_param("ssss", $nama_pelanggan, $no_telepon, $sekolah, $alamat_sekolah);
         $stmt->execute();
+        $id_pelanggan = $stmt->insert_id;
+        $stmt->close();
     }
 
-    // Redirect ke pesanan.php setelah insert
+    // 2. Ambil produk yang dipesan (dari hidden input JSON)
+    $produkListPesanan = json_decode($_POST['produkListPesanan'] ?? '[]', true);
+
+    // 3. Hitung total harga
+    $total_harga = 0;
+    foreach ($produkListPesanan as $item) {
+        $total_harga += ($item['harga'] ?? 0) * ($item['jumlah'] ?? 0);
+    }
+
+    // 4. Insert ke tabel pesanan
+    $stmt = $conn->prepare("INSERT INTO pesanan (id_pelanggan, tanggal_pesanan, total_harga, status) VALUES (?, ?, ?, ?)");
+    if (!$stmt) die("Prepare failed (pesanan INSERT): " . $conn->error);
+    $stmt->bind_param("isds", $id_pelanggan, $tanggal_pesanan, $total_harga, $status);
+    $stmt->execute();
+    $id_pesanan = $stmt->insert_id;
+    $stmt->close();
+
+    // 5. Insert ke tabel pembayaran
+    // Ambil metode pembayaran dari radio (lunas/nyicil) atau select (cicilan)
+    $metode_pembayaran = $_POST['metodeBayarCicilan'] ?? $metode_bayar; // fallback ke radio jika tidak ada select
+    if ($status === 'Sudah Lunas') {
+        $jumlah_bayar = $total_harga;
+        $tanggal_bayar = $tanggal_pesanan;
+    } else {
+        // Jika dicicil, ambil DP dan tanggal DP dari form
+        $jumlah_bayar = floatval($_POST['nominalDp'] ?? 0);
+        $tanggal_bayar = $_POST['tanggalDp'] ?? $tanggal_pesanan;
+        $metode_pembayaran = $_POST['metodeBayarCicilan'] ?? $metode_bayar;
+    }
+
+    $stmt = $conn->prepare("INSERT INTO pembayaran (id_pesanan, metode_pembayaran, jumlah_bayar, tanggal_bayar) VALUES (?, ?, ?, ?)");
+    if (!$stmt) die("Prepare failed (pembayaran INSERT): " . $conn->error);
+    $stmt->bind_param("isds", $id_pesanan, $metode_pembayaran, $jumlah_bayar, $tanggal_bayar);
+    $stmt->execute();
+    $stmt->close();
+
+    // 6. Update stok produk
+    foreach ($produkListPesanan as $item) {
+        $produk_id = $item['id'];
+        $jumlah = $item['jumlah'];
+        $size = $item['size'] ?? '';
+        if ($jumlah > 0 && $produk_id) {
+            if ($size) {
+                $stmt = $conn->prepare("UPDATE produk_stock SET stok = stok - ? WHERE id_produk = ? AND size = ?");
+                $stmt->bind_param("iis", $jumlah, $produk_id, $size);
+            } else {
+                $stmt = $conn->prepare("UPDATE produk_stock SET stok = stok - ? WHERE id_produk = ? AND (size IS NULL OR size = '')");
+                $stmt->bind_param("ii", $jumlah, $produk_id);
+            }
+            $stmt->execute();
+            $stmt->close();
+        }
+    }
+
+    // 7. Redirect ke pesanan.php setelah insert
     header("Location: pesanan.php");
     exit();
 }
@@ -106,14 +159,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="flex-grow-1 p-4">
       <h1>Pesanan</h1>
       <hr>
-      <div class="transaction-toolbar">
-        <h6 class="mb-1">
-          List Pesanan <span class="text-muted">&gt; Pesanan Baru</span>
-        </h6>
+      <!-- Breadcrumb: List Pesanan > Pesanan Baru -->
+      <div class="transaction-toolbar mb-3">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-1">
+            <li class="breadcrumb-item"><a href="pesanan.php">List Pesanan</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Pesanan Baru</li>
+          </ol>
+        </nav>
       </div>
       <div class="card shadow-sm mb-4 w-100">
         <div class="card-body">
-          <form method="POST" action="">
+          <form method="POST" action="pembayaran.php">
             <!-- Informasi Umum -->
             <div class="mb-3">
               <label for="namaPelanggan" class="form-label">Nama Pelanggan</label>
@@ -139,63 +196,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <i class="fas fa-plus"></i> Tambah Produk
               </button>
             </div>
-            <!-- Total -->
-            <div class="mt-2">
-              <hr class="my-2">
-              <div class="d-flex justify-content-between">
-                <span><strong>Total QTY</strong></span>
-                <span id="totalQty">0</span>
-              </div>
-              <div class="d-flex justify-content-between">
-                <span><strong>Total Harga</strong></span>
-                <span>Rp <span id="totalHarga">0</span></span>
-              </div>
-              <hr class="my-2">
-            </div>
-            <!-- Metode Pembayaran -->
-            <div class="mb-3">
-              <label class="form-label">Pembayaran</label><br>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="metodeBayar" id="lunas" value="lunas" checked>
-                <label class="form-check-label" for="lunas">Lunas</label>
-              </div>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="metodeBayar" id="nyicil" value="nyicil">
-                <label class="form-check-label" for="nyicil">Nyicil</label>
-              </div>
-            </div>
-            <!-- Detail Cicilan -->
-            <div id="detailCicilan" class="border p-3 mb-3 hidden">
-              <div class="mb-2">
-                <label for="nominalDp" class="form-label">Nominal DP (50%)</label>
-                <input type="number" class="form-control" id="nominalDp" name="nominalDp" readonly>
-              </div>
-              <div class="mb-2">
-                <label for="sisaBayar" class="form-label">Nominal Sisa yang Harus Dibayar (50%)</label>
-                <input type="number" class="form-control" id="sisaBayar" name="sisaBayar" readonly>
-              </div>
-              <div class="mb-2">
-                <label for="tanggalDp" class="form-label">Tanggal Pembayaran DP</label>
-                <input type="date" class="form-control" id="tanggalDp" name="tanggalDp">
-              </div>
-              <div class="mb-2">
-                <label for="tanggalJatuhTempo" class="form-label">Tanggal Jatuh Tempo</label>
-                <input type="date" class="form-control" id="tanggalJatuhTempo" name="tanggalJatuhTempo">
-              </div>
-              <div class="mb-2">
-                <label for="metodeBayarCicilan" class="form-label">Metode Pembayaran</label>
-                <select class="form-select" id="metodeBayarCicilan" name="metodeBayarCicilan">
-                  <option value="transfer">Transfer Bank</option>
-                  <option value="tunai">Tunai</option>
-                  <option value="qris">QRIS</option>
-                </select>
-              </div>
-            </div>
+
             <!-- Tombol Submit -->
             <div class="d-grid">
-              <button type="submit" class="btn btn-success">Buat Pesanan</button>
+              <input type="hidden" name="produkListPesanan" id="produkListPesananInput">
+              <button type="submit" class="btn btn-success">Lanjut ke Pembayaran</button>
             </div>
-            <input type="hidden" name="produkListPesanan" id="produkListPesananInput">
           </form>
         </div>
       </div>
@@ -264,9 +270,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       return `<select class="form-select produkSelect" name="produk_id[${idx}]" required>${options}</select>`;
     }
 
-    function getVariasiSelectHtml(idx) {
-      return `<select class="form-select variasiSelect" name="variasi[${idx}]" style="display:none;">
-        <option value="">Pilih Variasi</option>
+    function getSizeSelectHtml(idx) {
+      return `<select class="form-select sizeSelect" name="size[${idx}]" style="display:none;">
+        <option value="">Pilih Size</option>
       </select>`;
     }
 
@@ -277,7 +283,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     function getProdukInputRow(idx) {
       return `<div class="row g-2 mb-2 align-items-end produk-row" data-idx="${idx}">
         <div class="col-md-6">${getProdukSelectHtml(idx)}</div>
-        <div class="col-md-3 variasi-col" style="display:none;">${getVariasiSelectHtml(idx)}</div>
+        <div class="col-md-3 size-col" style="display:none;">${getSizeSelectHtml(idx)}</div>
         <div class="col-md jumlah-col">${getJumlahInputHtml(idx)}</div>
       </div>`;
     }
@@ -301,27 +307,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $('#produkInputs').on('change', '.produkSelect', function() {
         let $row = $(this).closest('.produk-row');
         let produkId = $(this).val();
-        let $variasiCol = $row.find('.variasi-col');
-        let $variasiSelect = $row.find('.variasiSelect');
+        let $sizeCol = $row.find('.size-col');
+        let $sizeSelect = $row.find('.sizeSelect');
         if (!produkId) {
-          $variasiCol.hide();
-          $variasiSelect.hide().html('<option value="">Pilih Variasi</option>');
+          $sizeCol.hide();
+          $sizeSelect.hide().html('<option value="">Pilih Size</option>');
           $row.find('.jumlah-col').removeClass('col-md-3').addClass('col-md');
           updateTotal();
           return;
         }
         $.get('get-variasi.php', { id_produk: produkId }, function(data) {
           if (data && data.length > 0) {
-            let html = '<option value="">Pilih Variasi</option>';
-            data.forEach(function(variasi) {
-              html += `<option value="${variasi}">${variasi}</option>`;
+            let html = '<option value="">Pilih Size</option>';
+            data.forEach(function(size) {
+              html += `<option value="${size}">${size}</option>`;
             });
-            $variasiSelect.html(html).show();
-            $variasiCol.show();
+            $sizeSelect.html(html).show();
+            $sizeCol.show();
             $row.find('.jumlah-col').removeClass('col-md').addClass('col-md-3');
           } else {
-            $variasiCol.hide();
-            $variasiSelect.hide().html('<option value="">Pilih Variasi</option>');
+            $sizeCol.hide();
+            $sizeSelect.hide().html('<option value="">Pilih Size</option>');
             $row.find('.jumlah-col').removeClass('col-md-3').addClass('col-md');
           }
           updateTotal();
@@ -334,7 +340,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       });
 
       // Event variasi select change
-      $('#produkInputs').on('change', '.variasiSelect', function() {
+      $('#produkInputs').on('change', '.sizeSelect', function() {
         updateTotal();
       });
 
@@ -362,11 +368,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $('#produkInputs .produk-row').each(function() {
         let produkId = $(this).find('.produkSelect').val();
         let produkNama = $(this).find('.produkSelect option:selected').text();
-        let variasi = $(this).find('.variasiSelect').is(':visible') ? $(this).find('.variasiSelect').val() : '';
+        let size = $(this).find('.sizeSelect').is(':visible') ? $(this).find('.sizeSelect').val() : '';
         let jumlah = parseInt($(this).find('.jumlahProduk').val()) || 0;
         let harga = parseInt($(this).find('.produkSelect option:selected').data('harga')) || 0;
         if (produkId && jumlah > 0) {
-          list.push({id: produkId, nama: produkNama, variasi: variasi, jumlah: jumlah, harga: harga});
+          list.push({id: produkId, nama: produkNama, size: size, jumlah: jumlah, harga: harga});
         }
       });
       return list;
