@@ -90,8 +90,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link rel="stylesheet" href="../styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    body { padding: 20px; }
-    .container { max-width: 900px; }
     .breadcrumb-container {
       margin-bottom: 1rem;
     }
@@ -137,91 +135,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </style>
 </head>
 <body>
-
   <div class="d-flex">
-  <?php include '../sidebar.php'; ?> <!-- Sidebar -->
+    <?php include '../sidebar.php'; ?> <!-- Sidebar -->
 
-  <div class="container"> 
-  <h1>Produk</h1>
-    <!-- Breadcrumbs -->
-        <nav aria-label="breadcrumb">
-          <ul class="breadcrumb-custom" id="breadcrumb">
-            <li><a href="produk.php">List Produk</a></li>
-            <li id="add_produk"><a href="#">Tambah Produk</a></li>
-          </ul>
-        </nav>
-    <!-- Card Form -->
-    <div class="card shadow-lg">
-      <div class="card-body">
-        <form action="" method="POST" enctype="multipart/form-data">
-          <div class="mb-3">
-            <label for="productName" class="form-label">Nama Produk</label>
-            <input type="text" class="form-control" id="productName" name="productName" required />
-          </div>
+    <!-- Ganti .container menjadi .flex-grow-1 p-4 agar tidak ada margin kiri-kanan -->
+    <div class="flex-grow-1 p-4">
+      <h1>Produk</h1>
+      <!-- Breadcrumbs -->
+      <nav aria-label="breadcrumb">
+        <ul class="breadcrumb-custom" id="breadcrumb">
+          <li><a href="produk.php">List Produk</a></li>
+          <li id="add_produk"><a href="#">Tambah Produk</a></li>
+        </ul>
+      </nav>
+      <!-- Card Form -->
+      <div class="card shadow-lg">
+        <div class="card-body">
+          <form action="" method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label for="productName" class="form-label">Nama Produk</label>
+              <input type="text" class="form-control" id="productName" name="productName" required />
+            </div>
 
-          <div class="mb-3">
-            <label for="productCategory" class="form-label">Kategori</label>
-            <select class="form-select" id="productCategory" name="productCategory" required>
-              <option selected disabled>--- Kategori ---</option>
-              <option value="SD">SD</option>
-              <option value="SMP">SMP</option>
-              <option value="SMA">SMA</option>
-            </select>
-          </div>
+            <div class="mb-3">
+              <label for="productCategory" class="form-label">Kategori</label>
+              <select class="form-select" id="productCategory" name="productCategory" required>
+                <option selected disabled> </option>
+                <option value="SD">SD</option>
+                <option value="SMP">SMP</option>
+                <option value="SMA">SMA</option>
+              </select>
+            </div>
 
-          <div class="mb-3">
-            <label for="productGender" class="form-label">Jenis Kelamin</label>
-            <select class="form-select" id="productGender" name="productGender" required>
-              <option selected disabled>--- Jenis Kelamin ---</option>
-              <option value="Pria">Pria</option>
-              <option value="Wanita">Wanita</option>
-              <option value="Unisex">Unisex</option>
-            </select>
-          </div>
+            <div class="mb-3">
+              <label for="productGender" class="form-label">Jenis Kelamin</label>
+              <select class="form-select" id="productGender" name="productGender" required>
+                <option selected disabled> </option>
+                <option value="Pria">Pria</option>
+                <option value="Wanita">Wanita</option>
+                <option value="Unisex">Unisex</option>
+              </select>
+            </div>
 
-          <div class="mb-3">
-            <label for="productPrice" class="form-label">Harga</label>
-            <input type="number" class="form-control" id="productPrice" name="productPrice" required />
-          </div>
+            <div class="mb-3">
+              <label for="productPrice" class="form-label">Harga</label>
+              <input type="number" class="form-control" id="productPrice" name="productPrice" required />
+            </div>
 
-          <div class="mb-3">
-            <label class="form-label">Apakah produk memiliki ukuran?</label>
-            <div>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="hasSize" id="hasSizeYes" value="1" checked />
-                <label class="form-check-label" for="hasSizeYes">Ya</label>
-              </div>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="hasSize" id="hasSizeNo" value="0" />
-                <label class="form-check-label" for="hasSizeNo">Tidak</label>
+            <div class="mb-3">
+              <label class="form-label">Apakah produk memiliki ukuran?</label>
+              <div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="hasSize" id="hasSizeYes" value="1" checked />
+                  <label class="form-check-label" for="hasSizeYes">Ya</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="hasSize" id="hasSizeNo" value="0" />
+                  <label class="form-check-label" for="hasSizeNo">Tidak</label>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div id="stokWithSize" class="mb-3">
-            <label class="form-label">Stok per Ukuran</label>
-            <div class="row g-2">
-              <div class="col"><input type="number" min="0" class="form-control" name="stok_xs" placeholder="XS" /></div>
-              <div class="col"><input type="number" min="0" class="form-control" name="stok_s" placeholder="S" /></div>
-              <div class="col"><input type="number" min="0" class="form-control" name="stok_m" placeholder="M" /></div>
-              <div class="col"><input type="number" min="0" class="form-control" name="stok_l" placeholder="L" /></div>
-              <div class="col"><input type="number" min="0" class="form-control" name="stok_xl" placeholder="XL" /></div>
+            <div id="stokWithSize" class="mb-3">
+              <label class="form-label">Stok per Ukuran</label>
+              <div class="row g-2">
+                <div class="col"><input type="number" min="0" class="form-control" name="stok_xs" placeholder="XS" /></div>
+                <div class="col"><input type="number" min="0" class="form-control" name="stok_s" placeholder="S" /></div>
+                <div class="col"><input type="number" min="0" class="form-control" name="stok_m" placeholder="M" /></div>
+                <div class="col"><input type="number" min="0" class="form-control" name="stok_l" placeholder="L" /></div>
+                <div class="col"><input type="number" min="0" class="form-control" name="stok_xl" placeholder="XL" /></div>
+              </div>
             </div>
-          </div>
 
-          <div id="stokNoSize" class="mb-3" style="display:none;">
-            <label class="form-label">Stok</label>
-            <input type="number" min="0" class="form-control" name="stok_nosize"/>
-          </div>
+            <div id="stokNoSize" class="mb-3" style="display:none;">
+              <label class="form-label">Stok</label>
+              <input type="number" min="0" class="form-control" name="stok_nosize"/>
+            </div>
 
-          <div class="mb-3">
-            <label for="productImage" class="form-label">Upload Gambar Produk</label>
-            <input class="form-control" type="file" id="productImage" name="productImage" accept=".jpg,.jpeg,.png,.gif" />
-          </div>
+            <div class="mb-3">
+              <label for="productImage" class="form-label">Upload Gambar Produk</label>
+              <input class="form-control" type="file" id="productImage" name="productImage" accept=".jpg,.jpeg,.png,.gif" />
+            </div>
 
-          <button type="submit" class="btn btn-primary">Simpan</button>
-          <a href="produk.php" class="btn btn-secondary ms-2">Batal</a>
-        </form>
+            <button type="submit" class="btn btn-light border text-black text-nowrap">
+              <i class="fas fa-save me-1"></i> Simpan
+            </button>
+            <a href="produk.php" class="btn btn-secondary ms-2">Batal</a>
+          </form>
+        </div>
       </div>
     </div>
   </div>

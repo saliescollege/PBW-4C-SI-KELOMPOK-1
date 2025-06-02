@@ -1,17 +1,5 @@
 <?php
-session_start();
-// koneksi database
-$host = 'localhost';
-$dbname = 'db_uniform';
-$username = 'root';
-$password = '';
-
-try {
-    $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    die("Koneksi gagal: " . $e->getMessage());
-}
+include '../koneksi.php';
 
 // Proses update stok jika form disubmit
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['stok'])) {
@@ -116,126 +104,114 @@ $sizes = ['XS', 'S', 'M', 'L', 'XL'];
 <html lang="id">
 <head>
     <meta charset="UTF-8" />
-    <title>Update Stok Semua Produk</title>
+    <title>Update Produk</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         .size-inputs { display: flex; gap: 10px; flex-wrap: wrap; }
         .size-inputs > div { min-width: 70px; }
-        .sidebar {
-        width: 250px;
-        flex-shrink: 0;
-        }
-
         .breadcrumb-custom {
-        display: flex;
-        list-style: none;
-        padding: 8px 15px;
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        font-size: 0.9rem;
+            display: flex;
+            list-style: none;
+            padding: 8px 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            font-size: 0.9rem;
         }
-
-        .breadcrumb-custom li {
-        margin-right: 8px;
-        }
-
+        .breadcrumb-custom li { margin-right: 8px; }
         .breadcrumb-custom li:not(:last-child)::after {
-        content: "\203A"; /* tanda panah kecil (›) */
-        margin-left: 8px;
-        color: #6c757d;
+            content: "\203A";
+            margin-left: 8px;
+            color: #6c757d;
         }
-
-        .breadcrumb-custom li:last-child::after {
-        content: "";
-        margin: 0;
-        }
-
-        .breadcrumb-custom a {
-        text-decoration: none;
-        color:rgb(1, 1, 1);
-        }
-
-        .breadcrumb-custom .active {
-        color: #6c757d;
-        pointer-events: none;
-        }
+        .breadcrumb-custom li:last-child::after { content: ""; margin: 0; }
+        .breadcrumb-custom a { text-decoration: none; color:rgb(1, 1, 1); }
+        .breadcrumb-custom .active { color: #6c757d; pointer-events: none; }
     </style>
-    
 </head>
 
-
-<body class="p-4">
 <div class="d-flex">
-<?php include '../sidebar.php'; ?> <!-- Menambahkan sidebar -->
-<div class="container">
-    <h1 class="mb-4">Produk</h1>
+<?php include '../sidebar.php'; ?>
 
+<div class="flex-grow-1 p-4">
+    <h1>Produk</h1>
     <!-- Breadcrumbs -->
     <nav aria-label="breadcrumb">
         <ul class="breadcrumb-custom" id="breadcrumb">
             <li><a href="produk.php">List Produk</a></li>
-            <li id="add_produk"><a href="#">Tambah Produk</a></li>
-          </ul>
-        </nav>
+            <li class="active">Update Produk</li>
+        </ul>
+    </nav>
 
-
-    <?php if (isset($message)): ?>
-        <div class="alert <?= strpos($message, 'Gagal') === false ? 'alert-success' : 'alert-danger' ?>">
-            <?= htmlspecialchars($message) ?>
-        </div>
-    <?php endif; ?>
-
-    <form method="post" action="" id="stokForm">
-        <?php foreach ($produk_list as $produk): ?>
-            <div class="mb-4 border p-3 rounded" data-produk-id="<?= $produk['id_produk'] ?>">
-                <h4><?= htmlspecialchars($produk['nama_produk']) ?> (ID: <?= $produk['id_produk'] ?>)</h4>
-                <p>
-                    <strong>Kategori:</strong> <?= htmlspecialchars($produk['kategori']) ?> |
-                    <strong>Warna:</strong> <?= htmlspecialchars($produk['warna']) ?> |
-                    <strong>Harga:</strong> Rp <?= number_format($produk['harga'], 0, ',', '.') ?>
-                </p>
-
-                <!-- Pilihan punya ukuran atau tidak -->
-                <div class="mb-3">
-                    <label>
-                        <input type="radio" name="punya_ukuran_<?= $produk['id_produk'] ?>" value="1" <?= $produk['punya_ukuran'] ? 'checked' : '' ?>>
-                        Dengan Ukuran
-                    </label>
-                    <label class="ms-3">
-                        <input type="radio" name="punya_ukuran_<?= $produk['id_produk'] ?>" value="0" <?= !$produk['punya_ukuran'] ? 'checked' : '' ?>>
-                        Tanpa Ukuran
-                    </label>
-                </div>
-
-                <!-- Input stok dengan ukuran -->
-                <div class="size-inputs stok-ukuran" style="<?= $produk['punya_ukuran'] ? 'display:flex;' : 'display:none;' ?>">
-                    <?php foreach ($sizes as $size): ?>
-                        <div>
-                            <label for="stok_<?= $size ?>_<?= $produk['id_produk'] ?>" class="form-label"><?= $size ?></label>
-                            <input type="number" min="0" class="form-control"
-                                   id="stok_<?= $size ?>_<?= $produk['id_produk'] ?>"
-                                   name="stok[<?= $produk['id_produk'] ?>][<?= $size ?>]"
-                                   value="<?= $produk['stok'][$size] ?? 0 ?>" />
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-
-                <!-- Input stok tanpa ukuran -->
-                <div class="stok-no-ukuran" style="<?= !$produk['punya_ukuran'] ? 'display:block;' : 'display:none;' ?>">
-                    <label for="stok_NO_SIZE_<?= $produk['id_produk'] ?>" class="form-label">Stok</label>
-                    <input type="number" min="0" class="form-control"
-                           id="stok_NO_SIZE_<?= $produk['id_produk'] ?>"
-                           name="stok[<?= $produk['id_produk'] ?>][NO_SIZE]"
-                           value="<?= $produk['stok']['NO_SIZE'] ?? 0 ?>" />
-                </div>
+    <div class="card shadow-lg">
+      <div class="card-body">
+        <?php if (isset($message)): ?>
+            <div class="alert <?= strpos($message, 'Gagal') === false ? 'alert-success' : 'alert-danger' ?>">
+                <?= htmlspecialchars($message) ?>
             </div>
-        <?php endforeach; ?>
+        <?php endif; ?>
 
-        <button type="submit" class="btn btn-primary mt-3">Update Semua Stok</button>
-        <a href="produk.php" class="btn btn-secondary mt-3 ms-2">Kembali ke Produk</a>
-    </form>
+        <form method="post" action="" id="stokForm">
+            <?php foreach ($produk_list as $produk): ?>
+                <div class="mb-4 p-3 rounded" data-produk-id="<?= $produk['id_produk'] ?>">
+                    <h4 class="mb-1"><?= htmlspecialchars($produk['nama_produk']) ?></h4>
+                    <div class="mb-2 ps-1">
+                        <span class="d-block mb-1">#<?= $produk['id_produk'] ?></span>
+                        <span class="d-block mb-1">
+                            Kategori:
+                            <span class="badge rounded-pill px-3 py-2" style="background-color:#e0eaff; color:#1a237e;">
+                                <?= htmlspecialchars($produk['kategori']) ?>
+                            </span>
+                        </span>
+                        <span class="d-block">
+                            Harga: Rp <?= number_format($produk['harga'], 0, ',', '.') ?>
+                        </span>
+                    </div>
+
+                    <!-- Pilihan punya ukuran atau tidak -->
+                    <div class="mb-3">
+                        <label>
+                            <input type="radio" name="punya_ukuran_<?= $produk['id_produk'] ?>" value="1" <?= $produk['punya_ukuran'] ? 'checked' : '' ?>>
+                            Dengan Ukuran
+                        </label>
+                        <label class="ms-3">
+                            <input type="radio" name="punya_ukuran_<?= $produk['id_produk'] ?>" value="0" <?= !$produk['punya_ukuran'] ? 'checked' : '' ?>>
+                            Tanpa Ukuran
+                        </label>
+                    </div>
+
+                    <!-- Input stok dengan ukuran -->
+                    <div class="size-inputs stok-ukuran" style="<?= $produk['punya_ukuran'] ? 'display:flex;' : 'display:none;' ?>">
+                        <?php foreach ($sizes as $size): ?>
+                            <div>
+                                <label for="stok_<?= $size ?>_<?= $produk['id_produk'] ?>" class="form-label"><?= $size ?></label>
+                                <input type="number" min="0" class="form-control"
+                                       id="stok_<?= $size ?>_<?= $produk['id_produk'] ?>"
+                                       name="stok[<?= $produk['id_produk'] ?>][<?= $size ?>]"
+                                       value="<?= $produk['stok'][$size] ?? 0 ?>" />
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <!-- Input stok tanpa ukuran -->
+                    <div class="stok-no-ukuran" style="<?= !$produk['punya_ukuran'] ? 'display:block;' : 'display:none;' ?>">
+                        <label for="stok_NO_SIZE_<?= $produk['id_produk'] ?>" class="form-label">Stok</label>
+                        <input type="number" min="0" class="form-control"
+                               id="stok_NO_SIZE_<?= $produk['id_produk'] ?>"
+                               name="stok[<?= $produk['id_produk'] ?>][NO_SIZE]"
+                               value="<?= $produk['stok']['NO_SIZE'] ?? 0 ?>" />
+                    </div>
+                </div>
+            <?php endforeach; ?>
+
+            <button type="submit" class="btn btn-light border text-black text-nowrap mt-3">
+                <i class="fas fa-save me-1"></i> Kirim
+            </button>
+        </form>
+      </div>
+    </div>
+</div>
 </div>
 
 <script>
@@ -260,7 +236,7 @@ $sizes = ['XS', 'S', 'M', 'L', 'XL'];
         updateView(); // inisialisasi tampilan
     });
 
-    <!-- Efek Collapse di Sidebar -->
+    // Efek Collapse di Sidebar
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('toggleSidebar');
     const logo = document.getElementById('sidebarLogo');
@@ -281,7 +257,6 @@ $sizes = ['XS', 'S', 'M', 'L', 'XL'];
         }
     });
 </script>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

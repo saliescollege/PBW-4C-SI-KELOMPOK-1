@@ -1,6 +1,5 @@
 <?php
-// Sesuaikan path koneksi database
-include '../koneksi.php'; // misal koneksi.php ada di 1 folder atas
+include '../koneksi.php';
 
 if (!isset($_GET['id'])) {
     header('Location: produk.php');

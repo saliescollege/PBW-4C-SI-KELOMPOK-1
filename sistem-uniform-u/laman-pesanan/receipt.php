@@ -16,6 +16,15 @@ $sql = "SELECT p.id_pesanan, p.tanggal_pesanan, p.total_harga, p.status,
 $result = mysqli_query($conn, $sql);
 $data = mysqli_fetch_assoc($result);
 
+// Jika data tidak ditemukan, tampilkan screen blank dan hentikan eksekusi
+if (!$data) {
+    // Nonaktifkan error reporting agar warning tidak muncul
+    error_reporting(0);
+    // Tampilkan halaman kosong
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Pesanan</title></head><body style="background:#fff;"></body></html>';
+    exit;
+}
+
 // Query untuk mengambil detail produk pada pesanan ini
 $detail = [];
 $sql_detail = "SELECT dp.jumlah, dp.subtotal, pr.nama_produk, ps.size, pr.harga
