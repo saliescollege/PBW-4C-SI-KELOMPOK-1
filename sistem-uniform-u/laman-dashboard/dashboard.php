@@ -20,9 +20,9 @@ $sql = "
     FROM produk p
     LEFT JOIN produk_stock ps ON p.id_produk = ps.id_produk
     GROUP BY p.id_produk
-    HAVING total_stok < 5
+    HAVING total_stok < 100
     ORDER BY total_stok ASC
-    LIMIT 5
+    LIMIT 100
 ";
 
 $stmt = $conn->query($sql);
