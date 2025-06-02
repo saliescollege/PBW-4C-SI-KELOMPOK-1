@@ -108,10 +108,18 @@ if (!$result) {
     flex-direction: column;
     }
 
-    .product-card img {
+    .product-card img,
+    .card-img-top {
       width: 100%;
-      aspect-ratio: 1/1;
-      object-fit: cover;
+      height: 220px;
+      object-fit: contain;
+      background: #f8f9fa;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+      /* Tambahan agar gambar selalu rata tengah secara vertikal */
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .product-card .size-buttons {
@@ -149,6 +157,7 @@ if (!$result) {
     .input-icon input {
       padding-left: 30px;
     }
+
 
     @media (max-width: 991.98px) {
       .col-md-4 {
@@ -205,166 +214,193 @@ if (!$result) {
                 $gambar = $row['gambar_produk'];
                 $harga = number_format($row['harga'], 0, ',', '.');
 
+                // Badge & tombol warna sesuai kategori
+                $badgeClass = '';
+                $editBtnClass = '';
+                $deleteBtnClass = '';
+                if (strtolower($kategori) === 'sd') {
+                    $badgeClass = 'tag-sd';
+                    $editBtnClass = 'btn-danger'; // merah
+                    $deleteBtnClass = 'btn-danger';
+                } elseif (strtolower($kategori) === 'smp') {
+                    $badgeClass = 'tag-smp';
+                    $editBtnClass = 'btn-primary'; // biru
+                    $deleteBtnClass = 'btn-primary';
+                } elseif (strtolower($kategori) === 'sma') {
+                    $badgeClass = 'tag-sma';
+                    $editBtnClass = 'btn-secondary'; // abu
+                    $deleteBtnClass = 'btn-secondary';
+                }
+
                 // Ambil semua entri stok produk ini
                 $stokQuery = mysqli_query($conn, "SELECT size, stok FROM produk_stock WHERE id_produk = '$id'");
                 $sizes = [];
 
                 while ($data = mysqli_fetch_assoc($stokQuery)) {
                     $cleanedSize = trim($data['size']);
-                    // Validasi ukuran (hanya nilai yang benar seperti S, M, L, XL, dst)
                     if ($cleanedSize !== '' && $cleanedSize !== '-' && preg_match('/^[A-Za-z0-9]+$/', $cleanedSize)) {
                         $sizes[] = $data;
                     }
                 }
 
-                // Jika tidak ada ukuran valid, maka produk dianggap tidak memiliki size
                 $punyaUkuran = count($sizes) > 0;
             ?>
             <div class="col-md-3 mb-4 produk-item">
-                  <div class="card h-100 product-card" data-product-id="<?= $id ?>" data-kategori="<?= strtolower($kategori) ?>">
-                      <img src="../assets/uniform/<?= htmlspecialchars($gambar) ?>" 
-                          class="card-img-top" 
-                          alt="<?= htmlspecialchars($nama) ?>" 
-                          style="height: 200px; object-fit: contain;" />
+      <div class="card h-100 product-card shadow-sm border-0" data-product-id="<?= $id ?>" data-kategori="<?= strtolower($kategori) ?>" style="border-radius: 16px;">
+        <div class="position-relative">
+          <img src="../assets/uniform/<?= htmlspecialchars($gambar) ?>"
+            class="card-img-top rounded-top"
+            alt="<?= htmlspecialchars($nama) ?>" />
 
-                    <div class="card-body d-flex flex-column">
-                        <?php
-                        $badgeClass = '';
-                        if ($kategori === 'SD') {
-                            $badgeClass = 'tag-sd';
-                        } elseif ($kategori === 'SMP') {
-                            $badgeClass = 'tag-smp';
-                        } elseif ($kategori === 'SMA') {
-                            $badgeClass = 'tag-sma';
-                        }
-                      ?>
-                      <span class="badge <?= $badgeClass ?> mb-2"><?= htmlspecialchars($kategori) ?></span>
-
-                        <h5 class="card-title text-center"><?= htmlspecialchars($nama) ?></h5>
-                        <p class="card-text mb-1 text-center">Rp <?= $harga ?></p>
-
-                        <?php if ($punyaUkuran): ?>
-                            <div class="mb-2 text-center">
-                                <?php foreach ($sizes as $data): ?>
-                                    <button class="btn btn-sm btn-outline-primary me-1 mb-1" onclick="showStock(this, '<?= $data['size'] ?>')">
-                                        <?= htmlspecialchars($data['size']) ?>
-                                    </button>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php else: ?>
-                            <button class="btn btn-sm btn-outline-secondary mb-2" onclick="showStock(this)">Show Stock</button>
-                        <?php endif; ?>
-
-                        <p class="stock-text fw-bold text-success mt-2"></p>
-
-                        <!-- Tombol Edit dan Hapus -->
-                        <div class="mt-auto d-flex justify-content-between">
-                            <a href="stok.php?id=<?= $id ?>" class="btn btn-sm btn-warning">Edit</a>
-                            <a href="hapus-produk.php?id=<?= $id ?>" class="btn btn-sm btn-danger">Hapus</a>
-                        </div>
-                    </div>
-                </div>
+          <!-- Badge kategori di pojok kiri atas gambar -->
+          <span class="position-absolute top-0 start-0 m-2 badge <?= $badgeClass ?> px-3 py-2 fs-6 shadow-sm" style="opacity:0.95;">
+            <?= htmlspecialchars($kategori) ?>
+          </span>
+        </div>
+        <div class="card-body d-flex flex-column pt-2 pb-1 px-2">
+          <div class="d-flex align-items-center justify-content-between mb-1">
+            <h5 class="card-title fw-semibold mb-0" style="font-size:1rem;"><?= htmlspecialchars($nama) ?></h5>
+            <div class="d-flex gap-1">
+              <a href="stok.php?id=<?= $id ?>"
+                class="btn btn-sm btn-light btn-icon-only border-0"
+                title="Edit"
+                style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:50%; color:#6c757d;">
+                <i class="fas fa-pen"></i>
+              </a>
+              <a href="hapus-produk.php?id=<?= $id ?>"
+                class="btn btn-sm btn-light btn-icon-only border-0"
+                title="Hapus"
+                onclick="return confirm('Yakin ingin menghapus produk ini?');"
+                style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:50%; color:#dc3545;">
+                <i class="fas fa-trash"></i>
+              </a>
             </div>
+          </div>
+          <?php if (!empty($row['jenis_kelamin'])): ?>
+            <div class="mb-2" style="font-size:0.95rem; color:#6c757d;">
+              <?= htmlspecialchars($row['jenis_kelamin']) ?>
+            </div>
+          <?php endif; ?>
+          <?php if ($punyaUkuran): ?>
+            <div class="mb-2 d-flex justify-content-between size-buttons">
+              <?php foreach ($sizes as $data): ?>
+                <button class="btn btn-sm btn-outline-primary rounded-pill px-3 me-1 mb-1 shadow-none"
+                  onclick="showStock(this, '<?= $data['size'] ?>')"
+                  style="transition: background 0.2s; font-size:0.85rem;">
+                  <?= htmlspecialchars($data['size']) ?>
+                </button>
+              <?php endforeach; ?>
+            </div>
+          <?php else: ?>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill mb-2 shadow-none" onclick="showStock(this)">Show Stock</button>
+          <?php endif; ?>
+          <p class="stock-text fw-bold text-success mt-1 mb-2"></p>
+          <div class="fw-bold text-black mt-auto" style="font-size:1rem;">
+            IDR <?= $harga ?>
+          </div>
+        </div>
+      </div>
+    </div>
         <?php endwhile; ?>
     </div>
 </div>
- <script>
-  const sidebar = document.getElementById('sidebar');
-  const toggleBtn = document.getElementById('toggleSidebar');
-  const logo = document.getElementById('sidebarLogo');
+          <script>
+            const sidebar = document.getElementById('sidebar');
+            const toggleBtn = document.getElementById('toggleSidebar');
+            const logo = document.getElementById('sidebarLogo');
 
-  toggleBtn.addEventListener('click', () => {
-    sidebar.classList.toggle('collapsed');
-  });
+            toggleBtn.addEventListener('click', () => {
+              sidebar.classList.toggle('collapsed');
+            });
 
-  sidebar.addEventListener('mouseenter', () => {
-    if (sidebar.classList.contains('collapsed')) {
-      sidebar.classList.remove('collapsed');
-    }
-  });
+            sidebar.addEventListener('mouseenter', () => {
+              if (sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+              }
+            });
 
-  sidebar.addEventListener('mouseleave', () => {
-    if (!sidebar.classList.contains('manual-toggle')) {
-      sidebar.classList.add('collapsed');
-    }
-  });
+            sidebar.addEventListener('mouseleave', () => {
+              if (!sidebar.classList.contains('manual-toggle')) {
+                sidebar.classList.add('collapsed');
+              }
+            });
 
-  // Fungsi showStock untuk produk dengan atau tanpa ukuran
-function showStock(button, size = null) {
-    const productId = button.closest('.product-card').getAttribute('data-product-id');
-    const stockDiv = button.closest('.card-body').querySelector('.stock-text');
+            // Fungsi showStock untuk produk dengan atau tanpa ukuran
+          function showStock(button, size = null) {
+              const productId = button.closest('.product-card').getAttribute('data-product-id');
+              const stockDiv = button.closest('.card-body').querySelector('.stock-text');
 
-    if (!size) {
-        fetch(`get_stock.php?id_produk=${productId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.stock !== undefined) {
-                    // Tampilkan stok meskipun 0
-                    stockDiv.textContent = `Stok: ${data.stock}`;
-                } else if (data.error) {
-                    stockDiv.textContent = `Error: ${data.error}`;
+              if (!size) {
+                  fetch(`get_stock.php?id_produk=${productId}`)
+                      .then(response => response.json())
+                      .then(data => {
+                          if (data.stock !== undefined) {
+                              // Tampilkan stok meskipun 0
+                              stockDiv.textContent = `Stok: ${data.stock}`;
+                          } else if (data.error) {
+                              stockDiv.textContent = `Error: ${data.error}`;
+                          } else {
+                              stockDiv.textContent = 'Stok: Tidak tersedia';
+                          }
+                      })
+                      .catch(error => {
+                          console.error('Error:', error);
+                          alert('Terjadi kesalahan saat mengambil stok.');
+                      });
+              } else {
+                  // Produk dengan ukuran (gunakan parameter size)
+                  fetch(`get_stock.php?id_produk=${productId}&size=${size}`)
+                      .then(response => response.json())
+                      .then(data => {
+                          if (data.stock !== undefined) {
+                              stockDiv.textContent = `Stok: ${data.stock}`;
+                          } else if (data.error) {
+                              stockDiv.textContent = `Error: ${data.error}`;
+                              alert(`Error: ${data.error}`);
+                          }
+                      })
+                      .catch(error => {
+                          console.error('Error:', error);
+                          alert('Terjadi kesalahan saat mengambil stok.');
+                      });
+              }
+          }
+          function filterKategori(kategori) {
+              const produkItems = document.querySelectorAll('.produk-item');
+
+              produkItems.forEach(item => {
+                const card = item.querySelector('.product-card');
+                const kategoriProduk = card.getAttribute('data-kategori');
+
+                if (kategori === 'all' || kategoriProduk === kategori) {
+                  item.style.display = 'block';
                 } else {
-                    stockDiv.textContent = 'Stok: Tidak tersedia';
+                  item.style.display = 'none';
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan saat mengambil stok.');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+              document.getElementById('btn-semua').addEventListener('click', () => filterKategori('all'));
+              document.getElementById('btn-sd').addEventListener('click', () => filterKategori('sd'));
+              document.getElementById('btn-smp').addEventListener('click', () => filterKategori('smp'));
+              document.getElementById('btn-sma').addEventListener('click', () => filterKategori('sma'));
             });
-    } else {
-        // Produk dengan ukuran (gunakan parameter size)
-        fetch(`get_stock.php?id_produk=${productId}&size=${size}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.stock !== undefined) {
-                    stockDiv.textContent = `Stok: ${data.stock}`;
-                } else if (data.error) {
-                    stockDiv.textContent = `Error: ${data.error}`;
-                    alert(`Error: ${data.error}`);
+
+              document.getElementById("searchInput").addEventListener("input", function () {
+              const keyword = this.value.toLowerCase();
+              const produkItems = document.querySelectorAll(".produk-item");
+
+              produkItems.forEach(function (item) {
+                const namaProduk = item.querySelector(".card-title").textContent.toLowerCase();
+                if (namaProduk.includes(keyword)) {
+                  item.style.display = "block";
+                } else {
+                  item.style.display = "none";
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan saat mengambil stok.');
+              });
             });
-    }
-}
- function filterKategori(kategori) {
-    const produkItems = document.querySelectorAll('.produk-item');
-
-    produkItems.forEach(item => {
-      const card = item.querySelector('.product-card');
-      const kategoriProduk = card.getAttribute('data-kategori');
-
-      if (kategori === 'all' || kategoriProduk === kategori) {
-        item.style.display = 'block';
-      } else {
-        item.style.display = 'none';
-      }
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', function () {
-    document.getElementById('btn-semua').addEventListener('click', () => filterKategori('all'));
-    document.getElementById('btn-sd').addEventListener('click', () => filterKategori('sd'));
-    document.getElementById('btn-smp').addEventListener('click', () => filterKategori('smp'));
-    document.getElementById('btn-sma').addEventListener('click', () => filterKategori('sma'));
-  });
-
-    document.getElementById("searchInput").addEventListener("input", function () {
-    const keyword = this.value.toLowerCase();
-    const produkItems = document.querySelectorAll(".produk-item");
-
-    produkItems.forEach(function (item) {
-      const namaProduk = item.querySelector(".card-title").textContent.toLowerCase();
-      if (namaProduk.includes(keyword)) {
-        item.style.display = "block";
-      } else {
-        item.style.display = "none";
-      }
-    });
-  });
-</script>
+          </script>
 
 
 

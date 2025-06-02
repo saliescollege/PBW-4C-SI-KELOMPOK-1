@@ -1,4 +1,5 @@
 <?php
+session_start();
 $host = 'localhost';
 $user = 'root';
 $pass = '';
@@ -86,11 +87,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tambah Produk</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     body { padding: 20px; }
     .container { max-width: 900px; }
     .breadcrumb-container {
       margin-bottom: 1rem;
+    }
+
+    .bg-light-pink {
+      background-color: #ffe6e6 !important;
     }
 
     .breadcrumb-custom {
@@ -130,6 +137,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </style>
 </head>
 <body>
+
+  <div class="d-flex">
+  <?php include '../sidebar.php'; ?> <!-- Sidebar -->
+
   <div class="container">
   <h2 class="mb-4">Tambah Produk</h2>
     <!-- Breadcrumbs -->
@@ -215,6 +226,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
   </div>
 
+  <!-- Efek Collapse di Sidebar -->
+    <script>
+      const sidebar = document.getElementById('sidebar');
+      const toggleBtn = document.getElementById('toggleSidebar');
+      const logo = document.getElementById('sidebarLogo');
+
+      toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+      });
+
+      sidebar.addEventListener('mouseenter', () => {
+        if (sidebar.classList.contains('collapsed')) {
+          sidebar.classList.remove('collapsed');
+        }
+      });
+
+      sidebar.addEventListener('mouseleave', () => {
+        if (!sidebar.classList.contains('manual-toggle')) {
+          sidebar.classList.add('collapsed');
+        }
+      });
+    </script>
+
   <script>
     const hasSizeYes = document.getElementById('hasSizeYes');
     const hasSizeNo = document.getElementById('hasSizeNo');
@@ -234,7 +268,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     hasSizeYes.addEventListener('change', toggleStokInput);
     hasSizeNo.addEventListener('change', toggleStokInput);
     toggleStokInput();
-    
+
     // Breadcrumb otomatis berdasarkan URL
     document.addEventListener('DOMContentLoaded', function () {
       const url = window.location.href;
