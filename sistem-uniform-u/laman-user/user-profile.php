@@ -30,6 +30,12 @@ if ($user_id) {
 
   <div class="flex-grow-1 p-4">
     <h2>Profil Anda</h2>
+
+    <!-- Card Form -->
+    <div class="card shadow-lg">
+      <div class="card-body">
+        <form action="" method="POST" enctype="multipart/form-data">
+          <div class="mb-3">
     <?php if ($profile): ?>
       <form id="profileForm" action="<?= $base_url ?>laman-masuk/lengkapiprofil.php" method="POST">
         <div class="mb-3">
@@ -69,6 +75,7 @@ if ($user_id) {
       <p>Anda belum memiliki akun, silahkan buat akun terlebih dahulu <a href="<?= $base_url ?>laman-masuk/register.php">di sini</a>.</p>
     <?php endif; ?>
   </div>
+</div>
 </div>
 
 <script>

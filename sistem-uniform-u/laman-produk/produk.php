@@ -158,6 +158,39 @@ if (!$result) {
       padding-left: 30px;
     }
 
+    .breadcrumb-custom {
+      display: flex;
+      list-style: none;
+      padding: 8px 15px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .breadcrumb-custom li {
+      margin-right: 8px;
+    }
+
+    .breadcrumb-custom li:not(:last-child)::after {
+      content: "\203A"; /* tanda panah kecil (›) */
+      margin-left: 8px;
+      color: #6c757d;
+    }
+
+    .breadcrumb-custom li:last-child::after {
+      content: "";
+      margin: 0;
+    }
+
+    .breadcrumb-custom a {
+      text-decoration: none;
+      color:rgb(1, 1, 1);
+    }
+
+    .breadcrumb-custom .active {
+      color: #6c757d;
+      pointer-events: none;
+    }
 
     @media (max-width: 991.98px) {
       .col-md-4 {
@@ -181,10 +214,21 @@ if (!$result) {
   <div class="main-content">
     <h1>Produk</h1>
     <hr>
-
+      <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb" class="breadcrumb-container mb-3">
+      <ul class="breadcrumb-custom" id="breadcrumb">
+        <li class="active">List Produk</li>
+      </ul>
+    </nav>
     <!-- Toolbar -->
     <div class="product-toolbar">
-      <h5 class="mb-1">List Produk</h5>
+    <!-- Kategori -->
+    <div class="product-categories">
+      <button id="btn-semua" class="btn btn-light border text-black">Semua Produk</button>
+      <button id="btn-sd" class="btn sd-btn">SD</button>
+      <button id="btn-smp" class="btn smp-btn">SMP</button>
+      <button id="btn-sma" class="btn sma-btn">SMA</button>
+    </div>
       <div class="d-flex align-items-center gap-2">
         <a href="add_produk.php" class="btn btn-light border text-black">
           <i class="fas fa-plus me-1"></i> Tambah Produk
@@ -194,14 +238,6 @@ if (!$result) {
           <input type="text" class="form-control" placeholder="Cari produk..." id="searchInput">
         </div>
       </div>
-    </div>
-
-    <!-- Kategori -->
-    <div class="product-categories">
-      <button id="btn-semua" class="btn btn-light border text-black">Semua Produk</button>
-      <button id="btn-sd" class="btn sd-btn">SD</button>
-      <button id="btn-smp" class="btn smp-btn">SMP</button>
-      <button id="btn-sma" class="btn sma-btn">SMA</button>
     </div>
 
 <div class="container mt-4">

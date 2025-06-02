@@ -1,4 +1,5 @@
 <?php
+session_start();
 // koneksi database
 $host = 'localhost';
 $dbname = 'db_uniform';
@@ -117,14 +118,68 @@ $sizes = ['XS', 'S', 'M', 'L', 'XL'];
     <meta charset="UTF-8" />
     <title>Update Stok Semua Produk</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         .size-inputs { display: flex; gap: 10px; flex-wrap: wrap; }
         .size-inputs > div { min-width: 70px; }
+        .sidebar {
+        width: 250px;
+        flex-shrink: 0;
+        }
+
+        .breadcrumb-custom {
+        display: flex;
+        list-style: none;
+        padding: 8px 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        }
+
+        .breadcrumb-custom li {
+        margin-right: 8px;
+        }
+
+        .breadcrumb-custom li:not(:last-child)::after {
+        content: "\203A"; /* tanda panah kecil (›) */
+        margin-left: 8px;
+        color: #6c757d;
+        }
+
+        .breadcrumb-custom li:last-child::after {
+        content: "";
+        margin: 0;
+        }
+
+        .breadcrumb-custom a {
+        text-decoration: none;
+        color:rgb(1, 1, 1);
+        }
+
+        .breadcrumb-custom .active {
+        color: #6c757d;
+        pointer-events: none;
+        }
     </style>
+    
 </head>
+
+
 <body class="p-4">
+<div class="d-flex">
+<?php include '../sidebar.php'; ?> <!-- Menambahkan sidebar -->
 <div class="container">
-    <h2 class="mb-4">Update Stok</h2>
+    <h1 class="mb-4">Produk</h1>
+
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb">
+        <ul class="breadcrumb-custom" id="breadcrumb">
+            <li><a href="produk.php">List Produk</a></li>
+            <li id="add_produk"><a href="#">Tambah Produk</a></li>
+          </ul>
+        </nav>
+
 
     <?php if (isset($message)): ?>
         <div class="alert <?= strpos($message, 'Gagal') === false ? 'alert-success' : 'alert-danger' ?>">
@@ -203,6 +258,27 @@ $sizes = ['XS', 'S', 'M', 'L', 'XL'];
 
         radioUkuran.forEach(r => r.addEventListener('change', updateView));
         updateView(); // inisialisasi tampilan
+    });
+
+    <!-- Efek Collapse di Sidebar -->
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const logo = document.getElementById('sidebarLogo');
+
+    toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+    });
+
+    sidebar.addEventListener('mouseenter', () => {
+        if (sidebar.classList.contains('collapsed')) {
+        sidebar.classList.remove('collapsed');
+        }
+    });
+
+    sidebar.addEventListener('mouseleave', () => {
+        if (!sidebar.classList.contains('manual-toggle')) {
+        sidebar.classList.add('collapsed');
+        }
     });
 </script>
 

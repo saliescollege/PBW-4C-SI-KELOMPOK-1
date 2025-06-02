@@ -141,8 +141,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="d-flex">
   <?php include '../sidebar.php'; ?> <!-- Sidebar -->
 
-  <div class="container">
-  <h2 class="mb-4">Tambah Produk</h2>
+  <div class="container"> 
+  <h1>Produk</h1>
     <!-- Breadcrumbs -->
         <nav aria-label="breadcrumb">
           <ul class="breadcrumb-custom" id="breadcrumb">
