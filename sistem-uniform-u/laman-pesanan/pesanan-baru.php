@@ -2,7 +2,7 @@
 session_start();
 include '../koneksi.php';
 
-// Ambil semua produk
+// Ambil daftar produk dari database untuk pilihan produk
 $produkList = [];
 $sql = "SELECT p.id_produk, p.nama_produk, p.kategori, p.harga FROM produk p";
 $res = $conn->query($sql);
@@ -10,6 +10,7 @@ while ($row = $res->fetch_assoc()) {
     $produkList[] = $row;
 }
 
+// Proses form jika ada POST (saat user submit pesanan baru)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nama_pelanggan = $_POST['namaPelanggan'] ?? '';
     $no_telepon = $_POST['nomorTelepon'] ?? '';
@@ -18,10 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $metode_bayar = $_POST['metodeBayar'] ?? '';
     $tanggal_pesanan = date('Y-m-d H:i:s');
 
-    // Status pesanan sesuai enum di db_uniform
+    // Status pesanan tergantung metode bayar
     $status = ($metode_bayar === 'lunas') ? 'Sudah Lunas' : 'Dicicil';
 
-    // 1. Cek/insert pelanggan
+    // Cek apakah pelanggan sudah ada, jika belum tambahkan
     $stmt = $conn->prepare("SELECT id_pelanggan FROM pelanggan WHERE nama_pelanggan=? AND no_telepon=? AND sekolah=? AND alamat_sekolah=?");
     if (!$stmt) die("Prepare failed (pelanggan SELECT): " . $conn->error);
     $stmt->bind_param("ssss", $nama_pelanggan, $no_telepon, $sekolah, $alamat_sekolah);
@@ -39,16 +40,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
     }
 
-    // 2. Ambil produk yang dipesan (dari hidden input JSON)
+    // Ambil list produk yang dipesan dari input tersembunyi (JSON)
     $produkListPesanan = json_decode($_POST['produkListPesanan'] ?? '[]', true);
 
-    // 3. Hitung total harga
+    // Hitung total harga pesanan
     $total_harga = 0;
     foreach ($produkListPesanan as $item) {
         $total_harga += ($item['harga'] ?? 0) * ($item['jumlah'] ?? 0);
     }
 
-    // 4. Insert ke tabel pesanan
+    // Simpan pesanan ke tabel pesanan
     $stmt = $conn->prepare("INSERT INTO pesanan (id_pelanggan, tanggal_pesanan, total_harga, status) VALUES (?, ?, ?, ?)");
     if (!$stmt) die("Prepare failed (pesanan INSERT): " . $conn->error);
     $stmt->bind_param("isds", $id_pelanggan, $tanggal_pesanan, $total_harga, $status);
@@ -56,26 +57,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_pesanan = $stmt->insert_id;
     $stmt->close();
 
-    // 5. Insert ke tabel pembayaran
-    // Ambil metode pembayaran dari radio (lunas/nyicil) atau select (cicilan)
-    $metode_pembayaran = $_POST['metodeBayarCicilan'] ?? $metode_bayar; // fallback ke radio jika tidak ada select
+    // Tentukan metode pembayaran dan nominal bayar
+    $metode_pembayaran = $_POST['metodeBayarCicilan'] ?? $metode_bayar;
     if ($status === 'Sudah Lunas') {
         $jumlah_bayar = $total_harga;
         $tanggal_bayar = $tanggal_pesanan;
     } else {
-        // Jika dicicil, ambil DP dan tanggal DP dari form
         $jumlah_bayar = floatval($_POST['nominalDp'] ?? 0);
         $tanggal_bayar = $_POST['tanggalDp'] ?? $tanggal_pesanan;
         $metode_pembayaran = $_POST['metodeBayarCicilan'] ?? $metode_bayar;
     }
 
+    // Simpan data pembayaran ke tabel pembayaran
     $stmt = $conn->prepare("INSERT INTO pembayaran (id_pesanan, metode_pembayaran, jumlah_bayar, tanggal_bayar) VALUES (?, ?, ?, ?)");
     if (!$stmt) die("Prepare failed (pembayaran INSERT): " . $conn->error);
     $stmt->bind_param("isds", $id_pesanan, $metode_pembayaran, $jumlah_bayar, $tanggal_bayar);
     $stmt->execute();
     $stmt->close();
 
-    // 6. Update stok produk
+    // Update stok produk sesuai pesanan
     foreach ($produkListPesanan as $item) {
         $produk_id = $item['id'];
         $jumlah = $item['jumlah'];
@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // 7. Redirect ke pesanan.php setelah insert
+    // Setelah selesai, redirect ke halaman daftar pesanan
     header("Location: pesanan.php");
     exit();
 }
@@ -109,6 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link rel="stylesheet" href="../styles.css">
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <style>
+    /* Styling badge status, tombol, dan select2 agar tampilan rapi */
     .status-badge {
       font-size: 0.95rem;
       font-weight: normal;
@@ -133,7 +134,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .hidden {
       display: none;
     }
-    /* Select2 agar sama tinggi dengan input Bootstrap */
     .select2-container .select2-selection--single {
       height: 38px !important;
       padding: 6px 12px !important;
@@ -199,8 +199,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
       <div class="card shadow-sm mb-4 w-100">
         <div class="card-body">
+          <!-- Form input pesanan baru -->
           <form method="POST" action="pembayaran.php">
-            <!-- Informasi Umum -->
             <div class="mb-3">
               <label for="namaPelanggan" class="form-label">Nama Pelanggan</label>
               <input type="text" class="form-control" id="namaPelanggan" name="namaPelanggan" required>
@@ -217,7 +217,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <label for="alamatSekolah" class="form-label">Alamat Sekolah</label>
               <textarea class="form-control" id="alamatSekolah" name="alamatSekolah" rows="2" required></textarea>
             </div>
-            <!-- Produk yang Dipesan -->
             <div class="mb-3">
               <label class="form-label">Produk yang Dipesan</label>
               <div id="produkInputs"></div>
@@ -225,8 +224,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <i class="fas fa-plus"></i> Tambah Produk
               </button>
             </div>
-
-            <!-- Tombol Submit -->
             <div class="d-grid">
               <input type="hidden" name="produkListPesanan" id="produkListPesananInput">
               <button type="submit" class="btn btn-success">Lanjut</button>
@@ -236,27 +233,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
   </div>
-  <!-- JavaScript -->
+  <!-- Script untuk dynamic form produk dan perhitungan total -->
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
-    // Toggle detail cicilan
+    // Event untuk menampilkan/menyembunyikan detail cicilan
     const metodeBayarRadios = document.querySelectorAll('input[name="metodeBayar"]');
     const detailCicilanDiv = document.getElementById('detailCicilan');
     metodeBayarRadios.forEach(radio => {
-      radio.addEventListener('change', () => {
-        detailCicilanDiv.classList.toggle('hidden', !document.getElementById('nyicil').checked);
+      radio && radio.addEventListener('change', () => {
+        detailCicilanDiv && detailCicilanDiv.classList.toggle('hidden', !document.getElementById('nyicil').checked);
       });
     });
 
-    // Select2 produk
+    // Inisialisasi select2 dan event produk
     $(document).ready(function() {
       $('#produkSelect').select2({
         placeholder: "Cari produk...",
         allowClear: true
       });
 
-      // AJAX ambil variasi
       $('#produkSelect').on('change', function() {
         var produkId = $(this).val();
         if (!produkId) {
@@ -283,12 +279,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       });
     });
 
-    // Data produk yang ditambahkan
+    // Variabel untuk menyimpan produk yang dipilih
     let produkListPesanan = [];
     let totalQty = 0;
     let totalHarga = 0;
     let produkIndex = 0;
 
+    // Fungsi untuk membuat select produk
     function getProdukSelectHtml(idx) {
       let options = `<option value="">Pilih Produk...</option>`;
       <?php foreach ($produkList as $produk): ?>
@@ -299,16 +296,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       return `<select class="form-select produkSelect" name="produk_id[${idx}]" required>${options}</select>`;
     }
 
+    // Fungsi untuk membuat select size
     function getSizeSelectHtml(idx) {
       return `<select class="form-select sizeSelect" name="size[${idx}]" style="display:none;">
         <option value="">Pilih Size</option>
       </select>`;
     }
 
+    // Fungsi untuk membuat input jumlah
     function getJumlahInputHtml(idx) {
       return `<input type="number" class="form-control jumlahProduk" name="jumlah[${idx}]" min="1" placeholder="Jumlah" required>`;
     }
 
+    // Fungsi untuk membuat satu baris input produk
     function getProdukInputRow(idx) {
       return `<div class="row g-2 mb-2 align-items-end produk-row" data-idx="${idx}">
         <div class="col-md-6">${getProdukSelectHtml(idx)}</div>
@@ -317,22 +317,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>`;
     }
 
-    // Tambah produk input pertama saat halaman load
+    // Event handler untuk tambah produk
     $(document).ready(function() {
       tambahProdukInput();
 
-      // Tambah produk input baru
       $('#tambahProdukBtn').on('click', function() {
         tambahProdukInput();
       });
 
-      // Hapus baris produk
       $('#produkInputs').on('click', '.btn-hapus-produk', function() {
         $(this).closest('.produk-row').remove();
         updateTotal();
       });
 
-      // Event produk select change
+      // Event saat produk dipilih, tampilkan size jika ada
       $('#produkInputs').on('change', '.produkSelect', function() {
         let $row = $(this).closest('.produk-row');
         let produkId = $(this).val();
@@ -363,26 +361,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }, 'json');
       });
 
-      // Event jumlah input change
+      // Event saat jumlah diubah
       $('#produkInputs').on('input', '.jumlahProduk', function() {
         updateTotal();
       });
 
-      // Event variasi select change
+      // Event saat size diubah
       $('#produkInputs').on('change', '.sizeSelect', function() {
         updateTotal();
       });
 
-      // Saat submit, serialisasi produk ke hidden input
+      // Saat form disubmit, simpan list produk ke input hidden
       $('form').on('submit', function() {
         $('#produkListPesananInput').val(JSON.stringify(getProdukListPesanan()));
       });
     });
 
-    // Fungsi tambah input produk
+    // Fungsi untuk menambah baris input produk baru
     function tambahProdukInput() {
       $('#produkInputs').append(getProdukInputRow(produkIndex));
-      // Inisialisasi select2 pada produk select yang baru
       $('#produkInputs .produkSelect').last().select2({
         placeholder: "Cari produk...",
         allowClear: true
@@ -391,7 +388,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       updateTotal();
     }
 
-    // Ambil data produk dari input
+    // Ambil list produk yang diinput user
     function getProdukListPesanan() {
       let list = [];
       $('#produkInputs .produk-row').each(function() {
@@ -407,7 +404,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       return list;
     }
 
-    // Update total QTY dan harga
+    // Hitung total qty dan harga semua produk
     function updateTotal() {
       let totalQty = 0;
       let totalHarga = 0;
@@ -420,7 +417,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $('#totalQty').text(totalQty);
       $('#totalHarga').text(totalHarga.toLocaleString());
 
-      // Update DP & Sisa jika nyicil
+      // Jika metode nyicil, hitung DP dan sisa bayar
       if ($('#nyicil').is(':checked')) {
         const dp = Math.round(totalHarga * 0.5);
         $('#nominalDp').val(dp);
@@ -428,9 +425,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
     }
 
+    // Update total jika metode bayar berubah
     $('input[name="metodeBayar"]').on('change', function() {
       updateTotal();
     });
+
+    // Efek collapse di sidebar
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const logo = document.getElementById('sidebarLogo');
+
+    if (sidebar && toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+      });
+
+      sidebar.addEventListener('mouseenter', () => {
+        if (sidebar.classList.contains('collapsed')) {
+          sidebar.classList.remove('collapsed');
+        }
+      });
+
+      sidebar.addEventListener('mouseleave', () => {
+        if (!sidebar.classList.contains('manual-toggle')) {
+          sidebar.classList.add('collapsed');
+        }
+      });
+    }
   </script>
 </body>
 </html>

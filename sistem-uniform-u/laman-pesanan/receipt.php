@@ -4,7 +4,7 @@ include '../koneksi.php';
 // Ambil id pesanan dari URL
 $id_pesanan = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-// Query data pesanan, pelanggan, dan pembayaran
+// Query untuk mengambil data utama pesanan dan pelanggan
 $sql = "SELECT p.id_pesanan, p.tanggal_pesanan, p.total_harga, p.status, 
                pel.nama_pelanggan, pel.sekolah, pel.no_telepon, pel.alamat_sekolah,
                bayar.metode_pembayaran, bayar.jumlah_bayar, bayar.tanggal_bayar
@@ -16,7 +16,7 @@ $sql = "SELECT p.id_pesanan, p.tanggal_pesanan, p.total_harga, p.status,
 $result = mysqli_query($conn, $sql);
 $data = mysqli_fetch_assoc($result);
 
-// Query detail produk pesanan (dengan join ke produk dan produk_stock untuk ambil nama & ukuran)
+// Query untuk mengambil detail produk pada pesanan ini
 $detail = [];
 $sql_detail = "SELECT dp.jumlah, dp.subtotal, pr.nama_produk, ps.size, pr.harga
                FROM detail_pesanan dp
@@ -28,8 +28,7 @@ while ($row = mysqli_fetch_assoc($res_detail)) {
     $detail[] = $row;
 }
 
-
-
+// Jika tombol "Tandai Sudah Lunas" ditekan, update status dan redirect ke list pesanan
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id_pesanan) {
     $conn->query("UPDATE pesanan SET status='Sudah Lunas' WHERE id_pesanan=$id_pesanan");
     $conn->query("UPDATE pembayaran SET jumlah_bayar=total_harga WHERE id_pesanan=$id_pesanan");
@@ -54,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id
         <div class="flex-grow-1 p-4">
             <h1>Pesanan</h1>
             <hr>
+            <!-- Breadcrumb navigasi -->
             <div class="transaction-toolbar mb-3">
               <nav aria-label="breadcrumb">
                 <ul class="breadcrumb-custom">
@@ -63,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id
               </nav>
             </div>
 
+            <!-- Tombol Unduh PDF dan Hapus Pesanan -->
             <div class="d-flex justify-content-end align-items-center gap-2 mt-4 mb-2">
               <button id="btn-unduh-pdf" class="btn btn-light border text-black text-nowrap" style="background-color:#ffe6e6; color:#d63384; border:1px solid #d63384;">
                 <i class="fas fa-file-pdf me-1"></i> Unduh PDF
@@ -72,14 +73,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id
               </button>
             </div>
 
-
-            <!-- Receipt Card -->
+            <!-- Kartu detail pesanan -->
             <div class="card shadow-sm p-4 mt-4">
                 <div class="d-flex justify-content-between">
                   <h5 class="fw-bold">Pesanan #<?= htmlspecialchars($data['id_pesanan'] ?? '') ?></h5>
                   <span class="text-muted"><?= date('d M Y', strtotime($data['tanggal_pesanan'] ?? '')) ?></span>
                 </div>
                 <hr>
+                <!-- Data pelanggan dan status -->
                 <div class="mb-3">
                   <p class="mb-1"><strong>Nama Pelanggan:</strong> <?= htmlspecialchars($data['nama_pelanggan'] ?? '') ?></p>
                   <p class="mb-1"><strong>No. Telepon:</strong> <?= htmlspecialchars($data['no_telepon'] ?? '') ?></p>
@@ -96,6 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id
                   </p>
                   <p class="mb-1"><strong>Metode Pembayaran:</strong> <?= htmlspecialchars($data['metode_pembayaran'] ?? '-') ?></p>
                 </div>
+                <!-- Tabel produk yang dipesan -->
                 <table class="table table-sm">
                   <thead class="table-light">
                     <tr>
@@ -125,6 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id
                   </tfoot>
                 </table>
 
+                <!-- Jika pembayaran dicicil, tampilkan detail cicilan dan tombol lunasi -->
                 <?php if (strtolower(trim($data['status'])) === 'dicicil'): ?>
                   <?php
                     $dp = round($data['total_harga'] * 0.5);
@@ -143,6 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id
                     </tbody>
                   </table>
                   <div class="text-center mb-3">
+                    <!-- Tombol untuk menandai pesanan sudah lunas -->
                     <form method="post" style="display:inline;">
                       <input type="hidden" name="aksi_lunasi" value="1">
                       <button type="submit" class="btn btn-success">
@@ -158,6 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id
     </div>
 
     <style>
+      /* Styling badge status dan breadcrumb */
       .status-badge {
         font-size: 0.95rem;
         font-weight: normal;
@@ -205,6 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id
         pointer-events: none;
       }
 
+      /* Styling khusus saat print */
       @media print {
         body * {
           visibility: hidden !important;
@@ -226,6 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
+    // Hapus pesanan dengan AJAX
     $('#btn-hapus-pesanan').on('click', function() {
       if (confirm('Yakin ingin menghapus pesanan ini?')) {
         var id = $(this).data('id');
@@ -240,6 +247,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id
       }
     });
 
+    // Unduh PDF dari isi card
     $('#btn-unduh-pdf').on('click', function() {
       var element = document.querySelector('.card.shadow-sm');
       html2pdf().from(element).set({
@@ -249,6 +257,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id
         jsPDF: {orientation: 'portrait', unit: 'mm', format: 'a4'}
       }).save();
     });
+
+    // Efek collapse di sidebar
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const logo = document.getElementById('sidebarLogo');
+
+    if (sidebar && toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+      });
+
+      sidebar.addEventListener('mouseenter', () => {
+        if (sidebar.classList.contains('collapsed')) {
+          sidebar.classList.remove('collapsed');
+        }
+      });
+
+      sidebar.addEventListener('mouseleave', () => {
+        if (!sidebar.classList.contains('manual-toggle')) {
+          sidebar.classList.add('collapsed');
+        }
+      });
+    }
     </script>
 </body>
 </html>
