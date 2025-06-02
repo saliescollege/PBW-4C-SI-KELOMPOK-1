@@ -32,6 +32,16 @@ $sql_jumlah_produk = "SELECT COUNT(*) as total_produk FROM produk";
 $stmt_jumlah_produk = $conn->query($sql_jumlah_produk);
 $row_jumlah_produk = $stmt_jumlah_produk->fetch(PDO::FETCH_ASSOC);
 $total_produk = $row_jumlah_produk['total_produk'];
+
+$sql_total_penjualan = "SELECT COUNT(*) AS total_penjualan FROM pesanan";
+$total_penjualan = $conn->query($sql_total_penjualan)->fetch(PDO::FETCH_ASSOC)['total_penjualan'];
+
+$sql_total_pendapatan = "SELECT SUM(total_harga) AS total_pendapatan FROM pesanan";
+$total_pendapatan = $conn->query($sql_total_pendapatan)->fetch(PDO::FETCH_ASSOC)['total_pendapatan'];
+
+$sql_total_pelanggan = "SELECT COUNT(DISTINCT id_pelanggan) AS total_pelanggan FROM pesanan";
+$total_pelanggan = $conn->query($sql_total_pelanggan)->fetch(PDO::FETCH_ASSOC)['total_pelanggan'];
+
 ?>
 
 <!DOCTYPE html>
@@ -64,7 +74,7 @@ $total_produk = $row_jumlah_produk['total_produk'];
           </div>
           <div>
             <h6 class="mb-0">Total Penjualan</h6>
-            <h4 class="fw-bold">28</h4>
+            <h4 class="fw-bold"><?= $total_penjualan ?></h4>
           </div>
         </div>
       </div>
@@ -79,7 +89,7 @@ $total_produk = $row_jumlah_produk['total_produk'];
           </div>
           <div>
             <h6 class="mb-0">Pendapatan</h6>
-            <h4 class="fw-bold">Rp 2.800.000</h4>
+            <h4 class="fw-bold">Rp <?= number_format($total_pendapatan, 0, ',', '.') ?></h4>
           </div>
         </div>
       </div>
@@ -94,7 +104,7 @@ $total_produk = $row_jumlah_produk['total_produk'];
           </div>
           <div>
             <h6 class="mb-0">Pelanggan</h6>
-            <h4 class="fw-bold">124</h4>
+            <h4 class="fw-bold"><?= $total_pelanggan ?></h4>
           </div>
         </div>
       </div>

@@ -3,12 +3,10 @@ session_start();
 include '../koneksi.php';
 include '../config.php';
 
-// $user_id = $_SESSION['user_id'];
 $user_id = $_SESSION['user_id'] ?? null;
 $profile = null;
 
 if ($user_id) {
-    // Jika user sudah login, ambil data profil
     $sql = "SELECT * FROM user_profile WHERE user_id = '$user_id'";
     $result = mysqli_query($conn, $sql);
     $profile = mysqli_fetch_assoc($result);
@@ -39,21 +37,15 @@ if ($user_id) {
           <input type="text" id="full_name" name="full_name" class="form-control" required
             value="<?= htmlspecialchars($profile['full_name']) ?>" disabled/>
         </div>
-
-
         <div class="mb-3">
           <label for="phone_number" class="form-label">Nomor HP</label>
           <input type="text" id="phone_number" name="phone_number" class="form-control" required
             value="<?= htmlspecialchars($profile['phone_number']) ?>"  disabled/>
         </div>
-
-
         <div class="mb-3">
           <label for="address" class="form-label">Alamat</label>
           <textarea id="address" name="address" class="form-control" rows="3" required  disabled><?= htmlspecialchars($profile['address']) ?></textarea>
         </div>
-
-
         <div class="mb-3">
           <label for="gender" class="form-label">Jenis Kelamin</label>
           <select id="gender" name="gender" class="form-select" required  disabled>
@@ -62,8 +54,6 @@ if ($user_id) {
             <option value="Perempuan" <?= $profile['gender'] == 'Perempuan' ? 'selected' : '' ?>>Perempuan</option>
           </select>
         </div>
-
-
         <div class="mb-3">
           <label for="birth_date" class="form-label">Tanggal Lahir</label>
           <input type="date" id="birth_date" name="birth_date" class="form-control" required
