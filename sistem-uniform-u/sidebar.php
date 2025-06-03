@@ -1,13 +1,23 @@
-<?php include_once __DIR__ . '/config.php'; ?>
+<?php
+// Meng-include file konfigurasi dan koneksi database
+include '../config.php'; 
+include '../koneksi.php';
+
+// Mengambil username dan email dari session jika ada
+$username = $_SESSION['username'] ?? '';
+$email = $_SESSION['email'] ?? '';
+?>
 
 <div class="d-flex">
-  <!-- Sidebar -->
+  <!-- Sidebar utama -->
   <div id="sidebar" class="sidebar bg-white shadow-sm">
+    <!-- Header sidebar: logo dan tombol collapse -->
     <div class="sidebar-header d-flex justify-content-between px-3 py-3 border-bottom">
       <img src="<?= $base_url ?>assets/Logo Uniform-U.png" alt="Logo" class="sidebar-logo" id="sidebarLogo">
-      <i class="fas fa-bars toggle-btn" id="toggleSidebar"></i>
+      <i class="fas fa-bars toggle-btn" id="toggleSidebar"></i> <!-- Tombol collapse sidebar -->
     </div>
 
+    <!-- Navigasi utama sidebar -->
     <ul class="nav flex-column mt-3">
       <li class="nav-item">
         <a class="nav-link" href="<?= $base_url ?>laman-dashboard/dashboard.php">
@@ -31,12 +41,16 @@
       </li>
     </ul>
 
-    <!-- Profile Pengguna -->
-    <a href="<?= $base_url ?>user-profile.php" class="sidebar-footer d-flex align-items-center border-top mt-auto py-2 px-3 text-decoration-none text-dark">
+    <!-- Footer sidebar: profil pengguna -->
+    <a href="<?= $base_url ?>laman-user/user-profile.php" class="sidebar-footer d-flex align-items-center border-top mt-auto py-2 px-3 text-decoration-none text-dark">
       <img src="<?= $base_url ?>assets/PFP.png" class="rounded-circle me-2" width="32" height="32" alt="User">
       <div class="user-info">
-        <div class="fw-semibold sidebar-text">Nana Ayu</div>
-        <small class="text-muted sidebar-text">@nanaayu</small>
+        <div class="fw-semibold sidebar-text">
+          <?= isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Tamu' ?>
+        </div>
+        <small class="text-muted sidebar-text">
+          <?= isset($_SESSION['email']) ? htmlspecialchars($_SESSION['email']) : '@gmail.com' ?>
+        </small>
       </div>
     </a>
   </div>

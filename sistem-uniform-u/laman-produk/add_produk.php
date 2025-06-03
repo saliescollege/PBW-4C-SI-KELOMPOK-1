@@ -1,4 +1,6 @@
 <?php
+session_start();
+// Koneksi ke database MySQL
 $host = 'localhost';
 $user = 'root';
 $pass = '';
@@ -8,16 +10,19 @@ if ($conn->connect_error) {
     die("Koneksi gagal: " . $conn->connect_error);
 }
 
+// Proses form jika ada POST (tambah produk)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Ambil data dari form
     $nama = $conn->real_escape_string($_POST['productName'] ?? '');
     $kategori = $conn->real_escape_string($_POST['productCategory'] ?? '');
     $gender = $conn->real_escape_string($_POST['productGender'] ?? '');
     $harga = (int) ($_POST['productPrice'] ?? 0);
     $hasSize = isset($_POST['hasSize']) ? (int)$_POST['hasSize'] : 1;
 
+    // Siapkan data stok
     $sizes = [];
     if ($hasSize === 1) {
-        // stok per size
+        // Jika produk punya ukuran, ambil stok per size
         $sizes = [
             'XS' => (int)($_POST['stok_xs'] ?? 0),
             'S'  => (int)($_POST['stok_s'] ?? 0),
@@ -26,12 +31,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'XL' => (int)($_POST['stok_xl'] ?? 0),
         ];
     } else {
-        // stok tanpa size
+        // Jika tidak punya ukuran, ambil stok total saja
         $sizes = [
             'NO_SIZE' => (int)($_POST['stok_nosize'] ?? 0),
         ];
     }
 
+    // Proses upload gambar produk
     $gambar = null;
     if (isset($_FILES['productImage']) && $_FILES['productImage']['error'] === UPLOAD_ERR_OK) {
         $tmp_name = $_FILES['productImage']['tmp_name'];
@@ -40,11 +46,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $allowed = ['jpg','jpeg','png','gif'];
         if (in_array($ext, $allowed)) {
             $newName = uniqid('produk_') . '.' . $ext;
-            $uploadDir = 'uploads/';
+            $uploadDir = '../assets/uniform/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
             $uploadPath = $uploadDir . $newName;
             if (move_uploaded_file($tmp_name, $uploadPath)) {
-                $gambar = $uploadPath;
+                $gambar = $newName; // hanya nama file
             } else {
                 echo "<script>alert('Gagal upload gambar');</script>";
             }
@@ -53,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // Simpan data produk ke tabel produk
     $sql = "INSERT INTO produk (nama_produk, kategori, jenis_kelamin, harga, gambar_produk) VALUES (?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("sssds", $nama, $kategori, $gender, $harga, $gambar);
@@ -60,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($stmt->affected_rows > 0) {
         $id_produk = $stmt->insert_id;
+        // Simpan stok ke tabel produk_stock
         $stmt_stock = $conn->prepare("INSERT INTO produk_stock (id_produk, size, stok) VALUES (?, ?, ?)");
         foreach ($sizes as $size => $stok) {
             if ($stok > 0) {
@@ -71,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->close();
         $conn->close();
 
+        // Redirect ke halaman produk jika sukses
         header("Location: produk.php?msg=success");
         exit;
     } else {
@@ -82,91 +91,171 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="id">
 <head>
+  <!-- Pengaturan meta dan pemanggilan CSS eksternal -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tambah Produk</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    body { padding: 20px; }
+    /* CSS untuk breadcrumbs dan tampilan form */
+    .breadcrumb-container {
+      margin-bottom: 1rem;
+    }
+    .bg-light-pink {
+      background-color: #ffe6e6 !important;
+    }
+    .breadcrumb-custom {
+      display: flex;
+      list-style: none;
+      padding: 8px 15px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    .breadcrumb-custom li {
+      margin-right: 8px;
+    }
+    .breadcrumb-custom li:not(:last-child)::after {
+      content: "\203A"; /* tanda panah kecil (›) */
+      margin-left: 8px;
+      color: #6c757d;
+    }
+    .breadcrumb-custom li:last-child::after {
+      content: "";
+      margin: 0;
+    }
+    .breadcrumb-custom a {
+      text-decoration: none;
+      color:rgb(1, 1, 1);
+    }
+    .breadcrumb-custom .active {
+      color: #6c757d;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Tambah Produk</h1>
-    <hr />
+  <div class="d-flex">
+    <?php include '../sidebar.php'; ?> <!-- Sidebar -->
 
-    <form action="" method="POST" enctype="multipart/form-data">
-      <div class="mb-3">
-        <label for="productName" class="form-label">Nama Produk</label>
-        <input type="text" class="form-control" id="productName" name="productName" placeholder="Masukkan nama produk" required />
-      </div>
-
-      <div class="mb-3">
-        <label for="productCategory" class="form-label">Kategori</label>
-        <select class="form-select" id="productCategory" name="productCategory" required>
-          <option selected disabled>Pilih kategori</option>
-          <option value="SD">SD</option>
-          <option value="SMP">SMP</option>
-          <option value="SMA">SMA</option>
-        </select>
-      </div>
-
-      <div class="mb-3">
-        <label for="productGender" class="form-label">Jenis Kelamin</label>
-        <select class="form-select" id="productGender" name="productGender" required>
-          <option selected disabled>Pilih jenis kelamin</option>
-          <option value="Pria">Pria</option>
-          <option value="Wanita">Wanita</option>
-          <option value="Unisex">Unisex</option>
-        </select>
-      </div>
-
-      <div class="mb-3">
-        <label for="productPrice" class="form-label">Harga</label>
-        <input type="number" class="form-control" id="productPrice" name="productPrice" placeholder="Contoh: 124850" required />
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label">Apakah produk memiliki ukuran?</label>
-        <div>
-          <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="hasSize" id="hasSizeYes" value="1" checked />
-            <label class="form-check-label" for="hasSizeYes">Ya, ada ukuran</label>
-          </div>
-          <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="hasSize" id="hasSizeNo" value="0" />
-            <label class="form-check-label" for="hasSizeNo">Tidak ada ukuran</label>
-          </div>
+    <!-- Form tambah produk -->
+    <div class="flex-grow-1 p-4">
+      <h1>Produk</h1>
+      <!-- Breadcrumbs -->
+      <nav aria-label="breadcrumb">
+        <ul class="breadcrumb-custom" id="breadcrumb">
+          <li><a href="produk.php">List Produk</a></li>
+          <li id="add_produk"><a href="#">Tambah Produk</a></li>
+        </ul>
+      </nav>
+      <!-- Card Form -->
+      <div class="card shadow-lg">
+        <div class="card-body">
+          <form action="" method="POST" enctype="multipart/form-data">
+            <!-- Input nama produk -->
+            <div class="mb-3">
+              <label for="productName" class="form-label">Nama Produk</label>
+              <input type="text" class="form-control" id="productName" name="productName" required />
+            </div>
+            <!-- Input kategori produk -->
+            <div class="mb-3">
+              <label for="productCategory" class="form-label">Kategori</label>
+              <select class="form-select" id="productCategory" name="productCategory" required>
+                <option selected disabled> </option>
+                <option value="SD">SD</option>
+                <option value="SMP">SMP</option>
+                <option value="SMA">SMA</option>
+              </select>
+            </div>
+            <!-- Input jenis kelamin produk -->
+            <div class="mb-3">
+              <label for="productGender" class="form-label">Jenis Kelamin</label>
+              <select class="form-select" id="productGender" name="productGender" required>
+                <option selected disabled> </option>
+                <option value="Pria">Pria</option>
+                <option value="Wanita">Wanita</option>
+                <option value="Unisex">Unisex</option>
+              </select>
+            </div>
+            <!-- Input harga produk -->
+            <div class="mb-3">
+              <label for="productPrice" class="form-label">Harga</label>
+              <input type="number" class="form-control" id="productPrice" name="productPrice" required />
+            </div>
+            <!-- Pilihan apakah produk punya ukuran -->
+            <div class="mb-3">
+              <label class="form-label">Apakah produk memiliki ukuran?</label>
+              <div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="hasSize" id="hasSizeYes" value="1" checked />
+                  <label class="form-check-label" for="hasSizeYes">Ya</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="hasSize" id="hasSizeNo" value="0" />
+                  <label class="form-check-label" for="hasSizeNo">Tidak</label>
+                </div>
+              </div>
+            </div>
+            <!-- Input stok per ukuran -->
+            <div id="stokWithSize" class="mb-3">
+              <label class="form-label">Stok per Ukuran</label>
+              <div class="row g-2">
+                <div class="col"><input type="number" min="0" class="form-control" name="stok_xs" placeholder="XS" /></div>
+                <div class="col"><input type="number" min="0" class="form-control" name="stok_s" placeholder="S" /></div>
+                <div class="col"><input type="number" min="0" class="form-control" name="stok_m" placeholder="M" /></div>
+                <div class="col"><input type="number" min="0" class="form-control" name="stok_l" placeholder="L" /></div>
+                <div class="col"><input type="number" min="0" class="form-control" name="stok_xl" placeholder="XL" /></div>
+              </div>
+            </div>
+            <!-- Input stok tanpa ukuran -->
+            <div id="stokNoSize" class="mb-3" style="display:none;">
+              <label class="form-label">Stok</label>
+              <input type="number" min="0" class="form-control" name="stok_nosize"/>
+            </div>
+            <!-- Input upload gambar produk -->
+            <div class="mb-3">
+              <label for="productImage" class="form-label">Upload Gambar Produk</label>
+              <input class="form-control" type="file" id="productImage" name="productImage" accept=".jpg,.jpeg,.png,.gif" />
+            </div>
+            <!-- Tombol simpan dan batal -->
+            <button type="submit" class="btn btn-light border text-black text-nowrap">
+              <i class="fas fa-save me-1"></i> Simpan
+            </button>
+            <a href="produk.php" class="btn btn-secondary ms-2">Batal</a>
+          </form>
         </div>
       </div>
-
-      <div id="stokWithSize" class="mb-3">
-        <label class="form-label">Stok per Ukuran</label>
-        <div class="row g-2">
-          <div class="col"><input type="number" min="0" class="form-control" name="stok_xs" placeholder="XS" /></div>
-          <div class="col"><input type="number" min="0" class="form-control" name="stok_s" placeholder="S" /></div>
-          <div class="col"><input type="number" min="0" class="form-control" name="stok_m" placeholder="M" /></div>
-          <div class="col"><input type="number" min="0" class="form-control" name="stok_l" placeholder="L" /></div>
-          <div class="col"><input type="number" min="0" class="form-control" name="stok_xl" placeholder="XL" /></div>
-        </div>
-      </div>
-
-      <div id="stokNoSize" class="mb-3" style="display:none;">
-        <label class="form-label">Stok</label>
-        <input type="number" min="0" class="form-control" name="stok_nosize" placeholder="Jumlah stok" />
-      </div>
-
-      <div class="mb-3">
-        <label for="productImage" class="form-label">Upload Gambar Produk</label>
-        <input class="form-control" type="file" id="productImage" name="productImage" accept=".jpg,.jpeg,.png,.gif" />
-      </div>
-
-      <button type="submit" class="btn btn-primary">Simpan</button>
-      <a href="produk.php" class="btn btn-secondary ms-2">Batal</a>
-    </form>
+    </div>
   </div>
 
+  <!-- Efek Collapse di Sidebar -->
   <script>
+    // Script untuk sidebar collapse/expand
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const logo = document.getElementById('sidebarLogo');
+
+    toggleBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+    });
+
+    sidebar.addEventListener('mouseenter', () => {
+      if (sidebar.classList.contains('collapsed')) {
+        sidebar.classList.remove('collapsed');
+      }
+    });
+
+    sidebar.addEventListener('mouseleave', () => {
+      if (!sidebar.classList.contains('manual-toggle')) {
+        sidebar.classList.add('collapsed');
+      }
+    });
+  </script>
+
+  <script>
+    // Script untuk menampilkan input stok sesuai pilihan ukuran
     const hasSizeYes = document.getElementById('hasSizeYes');
     const hasSizeNo = document.getElementById('hasSizeNo');
     const stokWithSize = document.getElementById('stokWithSize');
@@ -184,8 +273,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     hasSizeYes.addEventListener('change', toggleStokInput);
     hasSizeNo.addEventListener('change', toggleStokInput);
-
     toggleStokInput();
+
+    // Breadcrumb otomatis berdasarkan URL
+    document.addEventListener('DOMContentLoaded', function () {
+      const url = window.location.href;
+      const addProdukBreadcrumb = document.getElementById('add_produk');
+      if (!addProdukBreadcrumb) return; // Cegah error jika id tidak ditemukan
+
+      if (url.includes('add_produk.php')) {
+        addProdukBreadcrumb.style.display = 'inline';
+      } else {
+        addProdukBreadcrumb.style.display = 'none';
+      }
+    });
   </script>
 </body>
 </html>

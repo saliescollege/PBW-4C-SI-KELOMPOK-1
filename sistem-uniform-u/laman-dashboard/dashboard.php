@@ -1,4 +1,5 @@
 <?php
+session_start();
 // koneksi database (sesuaikan)
 $host = 'localhost';
 $dbname = 'db_uniform';
@@ -12,20 +13,52 @@ try {
     die("Koneksi gagal: " . $e->getMessage());
 }
 
-// Query produk dengan total stok kurang dari 5
+// Query produk dengan total stok
 $sql = "
-    SELECT p.id_produk, p.nama_produk, p.kategori, p.warna, p.harga,
+    SELECT p.id_produk, p.nama_produk, p.kategori, p.warna, p.harga, p.gambar_produk,
            SUM(IFNULL(ps.stok, 0)) AS total_stok
     FROM produk p
     LEFT JOIN produk_stock ps ON p.id_produk = ps.id_produk
     GROUP BY p.id_produk
-    HAVING total_stok < 5
+    HAVING total_stok < 100
     ORDER BY total_stok ASC
-    LIMIT 5
+    LIMIT 100
 ";
 
 $stmt = $conn->query($sql);
 $produk_reminder = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$sql_jumlah_produk = "SELECT COUNT(*) as total_produk FROM produk";
+$stmt_jumlah_produk = $conn->query($sql_jumlah_produk);
+$row_jumlah_produk = $stmt_jumlah_produk->fetch(PDO::FETCH_ASSOC);
+$total_produk = $row_jumlah_produk['total_produk'];
+
+$sql_total_penjualan = "SELECT COUNT(*) AS total_penjualan FROM pesanan";
+$total_penjualan = $conn->query($sql_total_penjualan)->fetch(PDO::FETCH_ASSOC)['total_penjualan'];
+
+$sql_total_pendapatan = "SELECT SUM(total_harga) AS total_pendapatan FROM pesanan";
+$total_pendapatan = $conn->query($sql_total_pendapatan)->fetch(PDO::FETCH_ASSOC)['total_pendapatan'];
+
+$sql_total_pelanggan = "SELECT COUNT(DISTINCT id_pelanggan) AS total_pelanggan FROM pesanan";
+$total_pelanggan = $conn->query($sql_total_pelanggan)->fetch(PDO::FETCH_ASSOC)['total_pelanggan'];
+
+// Ambil data penjualan harian untuk grafik
+$sql_penjualan = "
+    SELECT DATE(tanggal_pesanan) as tanggal, COUNT(*) as jumlah
+    FROM pesanan
+    GROUP BY DATE(tanggal_pesanan)
+    ORDER BY tanggal ASC
+";
+$stmt_penjualan = $conn->query($sql_penjualan);
+$penjualan = $stmt_penjualan->fetchAll(PDO::FETCH_ASSOC);
+
+$tanggal_array = [];
+$jumlah_array = [];
+foreach ($penjualan as $row) {
+    $tanggal_array[] = $row['tanggal'];
+    $jumlah_array[] = $row['jumlah'];
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -44,7 +77,7 @@ $produk_reminder = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <!-- Main Content -->
 <div class="flex-grow-1 p-4">
-  <h2>Selamat Datang, Nana</h2>
+ <h2>Selamat Datang, <?= isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Tamu' ?></h2>
   <hr>
 
   <!-- Row Cards -->
@@ -58,7 +91,7 @@ $produk_reminder = $stmt->fetchAll(PDO::FETCH_ASSOC);
           </div>
           <div>
             <h6 class="mb-0">Total Penjualan</h6>
-            <h4 class="fw-bold">28</h4>
+            <h4 class="fw-bold"><?= $total_penjualan ?></h4>
           </div>
         </div>
       </div>
@@ -73,7 +106,7 @@ $produk_reminder = $stmt->fetchAll(PDO::FETCH_ASSOC);
           </div>
           <div>
             <h6 class="mb-0">Pendapatan</h6>
-            <h4 class="fw-bold">Rp 2.800.000</h4>
+            <h4 class="fw-bold">Rp <?= number_format($total_pendapatan, 0, ',', '.') ?></h4>
           </div>
         </div>
       </div>
@@ -88,7 +121,7 @@ $produk_reminder = $stmt->fetchAll(PDO::FETCH_ASSOC);
           </div>
           <div>
             <h6 class="mb-0">Pelanggan</h6>
-            <h4 class="fw-bold">124</h4>
+            <h4 class="fw-bold"><?= $total_pelanggan ?></h4>
           </div>
         </div>
       </div>
@@ -103,7 +136,7 @@ $produk_reminder = $stmt->fetchAll(PDO::FETCH_ASSOC);
           </div>
           <div>
             <h6 class="mb-0">Jumlah Produk</h6>
-            <h4 class="fw-bold">48</h4>
+            <h4 class="fw-bold"><?=$total_produk ?></h4>
           </div>
         </div>
       </div>
@@ -132,7 +165,10 @@ $produk_reminder = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <?php foreach ($produk_reminder as $produk): ?>
           <div class="card product-card mb-3">
             <!-- Ganti image sesuai produk, kalau gak ada pake placeholder -->
-            <img src="../assets/uniform/default.png" class="card-img-top img-fluid" style="max-height: 200px; object-fit: contain;" alt="<?= htmlspecialchars($produk['nama_produk']) ?>">
+            <?php
+              $gambar = !empty($produk['gambar_produk']) ? "../assets/uniform/" . htmlspecialchars($produk['gambar_produk']) : "../assets/uniform/default.png";
+            ?>
+            <img src="<?= $gambar ?>" class="card-img-top img-fluid" style="max-height: 200px; object-fit: contain;" alt="<?= htmlspecialchars($produk['nama_produk']) ?>">
             <div class="card-body">
               <span class="product-tag tag-sd"><?= htmlspecialchars($produk['kategori']) ?></span>
               <div class="d-flex justify-content-between align-items-center">
@@ -182,14 +218,17 @@ $produk_reminder = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <!-- Visualisasi Chart -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+  const labels = <?= json_encode($tanggal_array) ?>;
+  const data = <?= json_encode($jumlah_array) ?>;
+
   const ctx = document.getElementById('salesChart').getContext('2d');
   const salesChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
+      labels: labels,
       datasets: [{
-        label: 'Penjualan',
-        data: [5, 12, 9, 14, 8, 15],
+        label: 'Jumlah Penjualan per Tanggal',
+        data: data,
         backgroundColor: 'rgba(13, 110, 253, 0.2)',
         borderColor: 'rgba(13, 110, 253, 1)',
         borderWidth: 2,
@@ -208,7 +247,7 @@ $produk_reminder = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
   });
 
-  function showStock(btn, qty) {
+    function showStock(btn, qty) {
     const stockText = btn.closest('.card-body').querySelector('.stock-text');
     stockText.textContent = `Stok ukuran ${btn.innerText}: ${qty}`;
     if (qty <= 2) {
