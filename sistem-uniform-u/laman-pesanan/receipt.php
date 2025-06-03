@@ -1,4 +1,5 @@
 <?php
+session_start();
 include '../koneksi.php';
 
 // Ambil id pesanan dari URL

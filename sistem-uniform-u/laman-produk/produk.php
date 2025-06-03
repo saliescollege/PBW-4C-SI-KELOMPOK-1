@@ -1,4 +1,5 @@
 <?php
+session_start();
 include '../koneksi.php';
 $query = "SELECT * FROM produk";
 $result = mysqli_query($conn, $query);
@@ -169,15 +170,18 @@ if (!$result) {
 </head>
 <body>
 <div class="main-wrapper">
-  <?php include '../sidebar.php'; ?>
+  <!-- Sidebar navigasi -->
+  <?php include '../sidebar.php'; ?> 
   <div class="main-content">
     <h1>Produk</h1>
     <hr>
+    <!-- Breadcrumbs navigasi -->
     <nav aria-label="breadcrumb" class="breadcrumb-container mb-3">
       <ul class="breadcrumb-custom" id="breadcrumb">
         <li class="active">List Produk</li>
       </ul>
     </nav>
+    <!-- Toolbar: kategori, tambah produk, dan pencarian -->
     <div class="product-toolbar">
       <div class="product-categories">
         <button id="btn-semua" class="btn btn-light border text-black">Semua Produk</button>
@@ -195,10 +199,12 @@ if (!$result) {
         </div>
       </div>
     </div>
+    <!-- Daftar produk -->
     <div class="row mt-4">
       <div class="row" id="listProduk">
         <?php while ($row = mysqli_fetch_assoc($result)) : ?>
           <?php 
+            // Ambil data produk dan tentukan kelas badge sesuai kategori
             $id = $row['id_produk'];
             $nama = $row['nama_produk'];
             $kategori = $row['kategori'];
@@ -220,6 +226,7 @@ if (!$result) {
                 $editBtnClass = 'btn-secondary';
                 $deleteBtnClass = 'btn-secondary';
             }
+            // Query stok produk per ukuran
             $stokQuery = mysqli_query($conn, "SELECT size, stok FROM produk_stock WHERE id_produk = '$id'");
             $sizes = [];
             while ($data = mysqli_fetch_assoc($stokQuery)) {
@@ -233,6 +240,7 @@ if (!$result) {
           <div class="col-md-3 mb-4 produk-item">
             <div class="card h-100 product-card shadow-sm border-0" data-product-id="<?= $id ?>" data-kategori="<?= strtolower($kategori) ?>" style="border-radius: 16px;">
               <div class="position-relative">
+                <!-- Gambar produk dan badge kategori -->
                 <img src="../assets/uniform/<?= htmlspecialchars($gambar) ?>"
                   class="card-img-top rounded-top"
                   alt="<?= htmlspecialchars($nama) ?>"
@@ -242,17 +250,20 @@ if (!$result) {
                 </span>
               </div>
               <div class="card-body d-flex flex-column pt-2 pb-1 px-2">
+                <!-- Nama produk dan tombol edit/hapus -->
                 <div class="d-flex align-items-center justify-content-between mb-1">
                   <h5 class="card-title mb-0" style="font-size:1rem; color:#212529; font-weight:400;">
                     <?= htmlspecialchars($nama) ?>
                   </h5>
                   <div class="d-flex gap-1">
+                    <!-- Tombol edit -->
                     <a href="stok.php?id=<?= $id ?>"
                       class="btn btn-sm btn-light btn-icon-only border-0"
                       title="Edit"
                       style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:50%; color:#6c757d;">
                       <i class="fas fa-pen"></i>
                     </a>
+                    <!-- Tombol hapus -->
                     <a href="hapus-produk.php?id=<?= $id ?>"
                       class="btn btn-sm btn-light btn-icon-only border-0"
                       title="Hapus"
@@ -262,14 +273,17 @@ if (!$result) {
                     </a>
                   </div>
                 </div>
+                <!-- Harga produk -->
                 <div class="mb-2" style="font-size:1rem; color:#212529; font-weight:700;">
                   Rp <?= $harga ?>
                 </div>
+                <!-- Gender produk jika ada -->
                 <?php if (!empty($row['jenis_kelamin'])): ?>
                   <div class="mb-2" style="font-size:0.95rem; color:#6c757d;">
                     <?= htmlspecialchars($row['jenis_kelamin']) ?>
                   </div>
                 <?php endif; ?>
+                <!-- Tombol ukuran jika ada -->
                 <?php if ($punyaUkuran): ?>
                   <div class="mb-2 d-flex justify-content-between size-buttons">
                     <?php foreach ($sizes as $data): ?>
@@ -283,6 +297,7 @@ if (!$result) {
                 <?php else: ?>
                   <button class="btn btn-sm btn-outline-secondary mb-2 shadow-none" onclick="showStock(this)">Show Stock</button>
                 <?php endif; ?>
+                <!-- Teks stok produk -->
                 <p class="stock-text fw-bold text-success mt-1 mb-2"></p>
               </div>
             </div>
@@ -291,6 +306,7 @@ if (!$result) {
       </div>
     </div>
     <script>
+      // Script sidebar collapse/expand
       const sidebar = document.getElementById('sidebar');
       const toggleBtn = document.getElementById('toggleSidebar');
       const logo = document.getElementById('sidebarLogo');
@@ -307,6 +323,8 @@ if (!$result) {
           sidebar.classList.add('collapsed');
         }
       });
+
+      // Fungsi menampilkan stok produk per ukuran
       function showStock(button, size = null) {
         const productId = button.closest('.product-card').getAttribute('data-product-id');
         const stockDiv = button.closest('.card-body').querySelector('.stock-text');
@@ -343,6 +361,8 @@ if (!$result) {
             });
         }
       }
+
+      // Filter produk berdasarkan kategori
       function filterKategori(kategori) {
         const produkItems = document.querySelectorAll('.produk-item');
         produkItems.forEach(item => {
@@ -355,12 +375,15 @@ if (!$result) {
           }
         });
       }
+
       document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('btn-semua').addEventListener('click', () => filterKategori('all'));
         document.getElementById('btn-sd').addEventListener('click', () => filterKategori('sd'));
         document.getElementById('btn-smp').addEventListener('click', () => filterKategori('smp'));
         document.getElementById('btn-sma').addEventListener('click', () => filterKategori('sma'));
       });
+
+      // Fitur pencarian produk
       document.getElementById("searchInput").addEventListener("input", function () {
         const keyword = this.value.toLowerCase();
         const produkItems = document.querySelectorAll(".produk-item");

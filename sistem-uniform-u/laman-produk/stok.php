@@ -1,5 +1,17 @@
 <?php
-include '../koneksi.php';
+session_start();
+// koneksi database
+$host = 'localhost';
+$dbname = 'db_uniform';
+$username = 'root';
+$password = '';
+
+try {
+    $conn = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $username, $password);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die("Koneksi gagal: " . $e->getMessage());
+}
 
 // Proses update stok jika form disubmit
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['stok'])) {
