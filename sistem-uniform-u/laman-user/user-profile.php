@@ -34,8 +34,6 @@ if ($user_id) {
     <!-- Card Form -->
     <div class="card shadow-lg">
       <div class="card-body">
-        <form action="" method="POST" enctype="multipart/form-data">
-          <div class="mb-3">
     <?php if ($profile): ?>
       <form id="profileForm" action="<?= $base_url ?>laman-masuk/lengkapiprofil.php" method="POST">
         <div class="mb-3">

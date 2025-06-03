@@ -25,16 +25,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     birth_date = '$birth_date',
                     updated_at = '$updated_at'
                   WHERE user_id = '$user_id'";
+        $redirect = '../laman-user/user-profile.php'; 
     } else {
         // insert
         $query = "INSERT INTO user_profile
                     (user_id, full_name, phone_number, address, gender, birth_date, updated_at)
                   VALUES
                     ('$user_id', '$full_name', '$phone_number', '$address', '$gender', '$birth_date', '$updated_at')";
+         $redirect = '../laman-masuk/login.php';
     }
 
     if (mysqli_query($conn, $query)) {
-        header("Location: ../laman-masuk/login.php");
+        header("Location: $redirect");
         exit();
     } else {
         $error_message = "Gagal menyimpan data, silakan coba lagi.";
