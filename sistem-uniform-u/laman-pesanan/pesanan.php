@@ -116,7 +116,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['namaPelanggan'])) {
     exit;
 }
 
-// --- Bagian untuk menampilkan list pesanan ---
 
 // Inisialisasi variabel produkListPesanan agar tidak error
 if (!isset($produkListPesanan)) {

@@ -295,7 +295,7 @@ if (!$result) {
                     <?php endforeach; ?>
                   </div>
                 <?php else: ?>
-                  <button class="btn btn-sm btn-outline-secondary mb-2 shadow-none" onclick="showStock(this)">Show Stock</button>
+                  <button class="btn btn-sm btn-outline-secondary mb-2 shadow-none" onclick="showStock(this)">Lihat Stok</button>
                 <?php endif; ?>
                 <!-- Teks stok produk -->
                 <p class="stock-text fw-bold text-success mt-1 mb-2"></p>

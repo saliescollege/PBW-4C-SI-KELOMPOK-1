@@ -336,9 +336,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         let produkId = $(this).val();
         let $sizeCol = $row.find('.size-col');
         let $sizeSelect = $row.find('.sizeSelect');
+        let $jumlahInput = $row.find('.jumlahProduk');
         if (!produkId) {
           $sizeCol.hide();
           $sizeSelect.hide().html('<option value="">Pilih Size</option>');
+          $jumlahInput.attr('max', '');
           $row.find('.jumlah-col').removeClass('col-md-3').addClass('col-md');
           updateTotal();
           return;
@@ -351,18 +353,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
             $sizeSelect.html(html).show();
             $sizeCol.show();
+            $jumlahInput.attr('max', ''); // reset max, tunggu size dipilih
             $row.find('.jumlah-col').removeClass('col-md').addClass('col-md-3');
           } else {
             $sizeCol.hide();
             $sizeSelect.hide().html('<option value="">Pilih Size</option>');
             $row.find('.jumlah-col').removeClass('col-md-3').addClass('col-md');
+            // Ambil stok produk tanpa size
+            $.get('get-stok-produk.php', { id_produk: produkId }, function(res) {
+              $jumlahInput.attr('max', res.stok || 0);
+            }, 'json');
           }
           updateTotal();
         }, 'json');
       });
 
+      // Saat size dipilih, ambil stok size tersebut
+      $('#produkInputs').on('change', '.sizeSelect', function() {
+        let $row = $(this).closest('.produk-row');
+        let produkId = $row.find('.produkSelect').val();
+        let size = $(this).val();
+        let $jumlahInput = $row.find('.jumlahProduk');
+        if (produkId && size) {
+          $.get('get-stok-produk.php', { id_produk: produkId, size: size }, function(res) {
+            $jumlahInput.attr('max', res.stok || 0);
+          }, 'json');
+        } else {
+          $jumlahInput.attr('max', '');
+        }
+      });
+
       // Event saat jumlah diubah
       $('#produkInputs').on('input', '.jumlahProduk', function() {
+        let max = parseInt($(this).attr('max')) || 0;
+        let val = parseInt($(this).val()) || 0;
+        if (max && val > max) {
+          $(this).val(max);
+        }
         updateTotal();
       });
 
