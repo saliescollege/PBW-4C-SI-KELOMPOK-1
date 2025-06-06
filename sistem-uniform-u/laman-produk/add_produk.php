@@ -163,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="mb-3">
               <label for="productCategory" class="form-label">Kategori</label>
               <select class="form-select" id="productCategory" name="productCategory" required>
-                <option selected disabled> </option>
+                <option selected disabled>Pilih Kategori</option>
                 <option value="SD">SD</option>
                 <option value="SMP">SMP</option>
                 <option value="SMA">SMA</option>
@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="mb-3">
               <label for="productGender" class="form-label">Jenis Kelamin</label>
               <select class="form-select" id="productGender" name="productGender" required>
-                <option selected disabled> </option>
+                <option selected disabled>Pilih Jenis Kelamin</option>
                 <option value="Pria">Pria</option>
                 <option value="Wanita">Wanita</option>
                 <option value="Unisex">Unisex</option>
@@ -216,14 +216,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <!-- Input upload gambar produk -->
             <div class="mb-3">
-              <label for="productImage" class="form-label">Upload Gambar Produk</label>
+              <label for="productImage" class="form-label">Upload Foto Produk</label>
               <input class="form-control" type="file" id="productImage" name="productImage" accept=".jpg,.jpeg,.png,.gif" />
             </div>
             <!-- Tombol simpan dan batal -->
             <button type="submit" class="btn btn-light border text-black text-nowrap">
-              <i class="fas fa-save me-1"></i> Simpan
+              <i class="fas fa-save me-1"></i> Tambah Produk
             </button>
-            <a href="produk.php" class="btn btn-secondary ms-2">Batal</a>
+            <a href="produk.php" class="btn btn-secondary ms-2">Kembali</a>
           </form>
         </div>
       </div>

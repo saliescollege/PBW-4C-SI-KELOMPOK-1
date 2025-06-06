@@ -67,8 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id
             <div class="transaction-toolbar mb-3">
               <nav aria-label="breadcrumb">
                 <ul class="breadcrumb-custom">
-                  <li><a href="pesanan.php">List Pesanan</a></li>
-                  <li class="active">Detail Pesanan</li>
+                  <li><a href="pesanan.php">Daftar Pesanan</a></li>
+                  <li class="active">Rincian Pesanan</li>
                 </ul>
               </nav>
             </div>
@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id
             <!-- Tombol Unduh PDF dan Hapus Pesanan -->
             <div class="d-flex justify-content-end align-items-center gap-2 mt-4 mb-2">
               <button id="btn-unduh-pdf" class="btn btn-light border text-black text-nowrap" style="background-color:#ffe6e6; color:#d63384; border:1px solid #d63384;">
-                <i class="fas fa-file-pdf me-1"></i> Unduh PDF
+                <i class="fas fa-file-pdf me-1"></i> Download PDF
               </button>
               <button id="btn-hapus-pesanan" class="btn btn-light border text-black text-nowrap" data-id="<?= htmlspecialchars($data['id_pesanan']) ?>">
                 <i class="fas fa-trash me-1"></i> Hapus Pesanan
@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id
                     <tr>
                       <th>Produk</th>
                       <th>Ukuran</th>
-                      <th>Qty</th>
+                      <th>Jumlah</th>
                       <th>Harga</th>
                       <th>Subtotal</th>
                     </tr>
@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id
                   </tbody>
                   <tfoot>
                     <tr>
-                      <th colspan="4" class="text-end">Total</th>
+                      <th colspan="4" class="text-end">Total Harga</th>
                       <th>Rp <?= number_format($data['total_harga'] ?? 0, 0, ',', '.') ?></th>
                     </tr>
                   </tfoot>
@@ -150,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi_lunasi']) && $id
                         <td>Rp <?= number_format($dp, 0, ',', '.') ?></td>
                       </tr>
                       <tr>
-                        <th class="bg-light">Sisa Cicilan</th>
+                        <th class="bg-light">Sisa Pembayaran</th>
                         <td>Rp <?= number_format($sisa, 0, ',', '.') ?></td>
                       </tr>
                     </tbody>

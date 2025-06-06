@@ -116,7 +116,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['namaPelanggan'])) {
     exit;
 }
 
-// --- Bagian untuk menampilkan list pesanan ---
 
 // Inisialisasi variabel produkListPesanan agar tidak error
 if (!isset($produkListPesanan)) {
@@ -246,11 +245,11 @@ if ($id_pesanan > 0) {
         <div></div>
         <div class="d-flex align-items-center gap-2">
           <a href="pesanan-baru.php" class="btn btn-light border text-black text-nowrap">
-            <i class="fas fa-plus me-1"></i> Tambah Pesanan
+            <i class="fas fa-plus me-1"></i> Buat Pesanan Baru
           </a>
           <div class="input-group" style="max-width: 250px;">
             <span class="input-group-text"><i class="fas fa-search"></i></span>
-            <input type="text" id="searchInput" class="form-control" placeholder="Cari transaksi...">
+            <input type="text" id="searchInput" class="form-control" placeholder="Cari pesanan atau nama pelanggan...">
           </div>
         </div>
       </div>
@@ -309,7 +308,7 @@ if ($id_pesanan > 0) {
                 </tr>
                 <?php endwhile; else: ?>
                 <tr>
-                  <td colspan="6" class="text-center text-muted">Belum ada pesanan.</td>
+                  <td colspan="6" class="text-center text-muted">Belum ada data pesanan masuk.</td>
                 </tr>
                 <?php endif; ?>
               </tbody>
@@ -342,7 +341,7 @@ if ($id_pesanan > 0) {
             if (res.trim() === 'ok') {
                 row.fadeOut(300, function() { $(this).remove(); });
             } else {
-                alert('Gagal menghapus pesanan!');
+                alert('Oops! Gagal menghapus pesanan.');
             }
         });
     }
