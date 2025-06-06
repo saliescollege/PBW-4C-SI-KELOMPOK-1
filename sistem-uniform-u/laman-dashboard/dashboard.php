@@ -150,6 +150,9 @@ foreach ($penjualan as $row) {
     <div class="card shadow-sm border-0 h-100">
       <div class="card-body">
         <h5 class="card-title">Grafik Penjualan</h5>
+        <select id="filterType" class="form-select w-auto">
+        <option value="daily">Harian</option>
+        <option value="monthly">Bulanan</option></select>
         <canvas id="salesChart" height="150"></canvas>
       </div>
     </div>
@@ -218,17 +221,30 @@ foreach ($penjualan as $row) {
 <!-- Visualisasi Chart -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  const labels = <?= json_encode($tanggal_array) ?>;
-  const data = <?= json_encode($jumlah_array) ?>;
+  const rawData = <?= json_encode($penjualan) ?>;
+
+  // Proses data untuk tampilan harian
+  const dailyLabels = rawData.map(item => item.tanggal);
+  const dailyData = rawData.map(item => parseInt(item.jumlah));
+
+  // Proses data untuk tampilan bulanan
+  const monthlyMap = {};
+  rawData.forEach(item => {
+    const [year, month] = item.tanggal.split('-');
+    const key = `${year}-${month}`;
+    monthlyMap[key] = (monthlyMap[key] || 0) + parseInt(item.jumlah);
+  });
+  const monthlyLabels = Object.keys(monthlyMap);
+  const monthlyData = Object.values(monthlyMap);
 
   const ctx = document.getElementById('salesChart').getContext('2d');
-  const salesChart = new Chart(ctx, {
+  let salesChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: labels,
+      labels: dailyLabels,
       datasets: [{
         label: 'Jumlah Penjualan per Tanggal',
-        data: data,
+        data: dailyData,
         backgroundColor: 'rgba(13, 110, 253, 0.2)',
         borderColor: 'rgba(13, 110, 253, 1)',
         borderWidth: 2,
@@ -245,6 +261,23 @@ foreach ($penjualan as $row) {
         }
       }
     }
+  });
+
+  // Event untuk ganti tampilan
+  document.getElementById('filterType').addEventListener('change', function () {
+    const type = this.value;
+
+    if (type === 'daily') {
+      salesChart.data.labels = dailyLabels;
+      salesChart.data.datasets[0].data = dailyData;
+      salesChart.data.datasets[0].label = 'Jumlah Penjualan per Tanggal';
+    } else {
+      salesChart.data.labels = monthlyLabels;
+      salesChart.data.datasets[0].data = monthlyData;
+      salesChart.data.datasets[0].label = 'Jumlah Penjualan per Bulan';
+    }
+
+    salesChart.update();
   });
 
     function showStock(btn, qty) {
