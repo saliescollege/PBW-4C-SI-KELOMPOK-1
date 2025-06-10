@@ -1,5 +1,10 @@
 <?php
 session_start();
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // koneksi database (sesuaikan)
 $host = 'localhost';
 $dbname = 'db_uniform';
@@ -13,15 +18,14 @@ try {
     die("Koneksi gagal: " . $e->getMessage());
 }
 
-// Query produk dengan total stok
+// Query produk dengan total stok per ukuran
 $sql = "
     SELECT p.id_produk, p.nama_produk, p.kategori, p.warna, p.harga, p.gambar_produk,
-           SUM(IFNULL(ps.stok, 0)) AS total_stok
+           ps.size, ps.stok AS current_stok, ps.id as id_stock
     FROM produk p
-    LEFT JOIN produk_stock ps ON p.id_produk = ps.id_produk
-    GROUP BY p.id_produk
-    HAVING total_stok < 100
-    ORDER BY total_stok ASC
+    JOIN produk_stock ps ON p.id_produk = ps.id_produk
+    WHERE ps.stok < 100
+    ORDER BY ps.stok ASC
     LIMIT 100
 ";
 
@@ -73,16 +77,11 @@ foreach ($penjualan as $row) {
 </head>
 <body>
 <div class="d-flex">
-<?php include '../sidebar.php'; ?> <!--Menambahkan sidebar-->
-
-<!-- Main Content -->
-<div class="flex-grow-1 p-4">
+<?php include '../sidebar.php'; ?> <div class="flex-grow-1 p-4">
  <h2>Selamat Datang, <?= isset($_SESSION['username']) ? htmlspecialchars($_SESSION['username']) : 'Tamu' ?></h2>
   <hr>
 
-  <!-- Row Cards -->
   <div class="row g-4 mb-4">
-    <!-- Total Penjualan -->
     <div class="col-md-6 col-xl-3">
       <div class="card shadow-sm border-0">
         <div class="card-body d-flex align-items-center">
@@ -97,7 +96,6 @@ foreach ($penjualan as $row) {
       </div>
     </div>
 
-    <!-- Total Pendapatan -->
     <div class="col-md-6 col-xl-3">
       <div class="card shadow-sm border-0">
         <div class="card-body d-flex align-items-center">
@@ -112,7 +110,6 @@ foreach ($penjualan as $row) {
       </div>
     </div>
 
-    <!-- Total Pelanggan -->
     <div class="col-md-6 col-xl-3">
       <div class="card shadow-sm border-0">
         <div class="card-body d-flex align-items-center">
@@ -127,7 +124,6 @@ foreach ($penjualan as $row) {
       </div>
     </div>
 
-    <!-- Total Produk -->
     <div class="col-md-6 col-xl-3">
       <div class="card shadow-sm border-0">
         <div class="card-body d-flex align-items-center">
@@ -143,9 +139,7 @@ foreach ($penjualan as $row) {
     </div>
   </div>
 
-  <!-- Grafik Penjualan & Reminder Produk -->
-<div class="row g-4 mb-4">
-  <!-- Grafik Penjualan -->
+  <div class="row g-4 mb-4">
   <div class="col-lg-8">
     <div class="card shadow-sm border-0 h-100">
       <div class="card-body">
@@ -158,7 +152,6 @@ foreach ($penjualan as $row) {
     </div>
   </div>
 
-<!-- Produk Hampir Habis -->
 <div class="col-lg-4">
   <div class="card shadow-sm border-0 h-100">
     <div class="card-body">
@@ -167,7 +160,6 @@ foreach ($penjualan as $row) {
       <?php if (count($produk_reminder) > 0): ?>
         <?php foreach ($produk_reminder as $produk): ?>
           <div class="card product-card mb-3">
-            <!-- Ganti image sesuai produk, kalau gak ada pake placeholder -->
             <?php
               $gambar = !empty($produk['gambar_produk']) ? "../assets/uniform/" . htmlspecialchars($produk['gambar_produk']) : "../assets/uniform/default.png";
             ?>
@@ -179,8 +171,15 @@ foreach ($penjualan as $row) {
               </div>
               <small class="text-muted"><?= htmlspecialchars($produk['warna']) ?></small>
               <hr>
-              <div class="stock-text <?= ($produk['total_stok'] <= 2) ? 'text-danger' : '' ?>">
-                Stok tersisa: <?= $produk['total_stok'] ?>
+              <div class="stock-text <?= ($produk['current_stok'] <= 2) ? 'text-danger' : '' ?>">
+                Stok tersisa
+                <?php
+                    if ($produk['size'] !== 'NO_SIZE' && !empty($produk['size'])) {
+                        echo htmlspecialchars($produk['size']) . ': ' . $produk['current_stok'];
+                    } else {
+                        echo $produk['current_stok'];
+                    }
+                ?>
               </div>
               <hr>
               <h6 class="fw-bold">Rp <?= number_format($produk['harga'], 0, ',', '.') ?></h6>
@@ -195,7 +194,6 @@ foreach ($penjualan as $row) {
   </div>
 </div>
 
-<!-- Efek Collapse di Sidebar -->
 <script>
   const sidebar = document.getElementById('sidebar');
   const toggleBtn = document.getElementById('toggleSidebar');
@@ -218,7 +216,6 @@ foreach ($penjualan as $row) {
   });
 </script>
 
-<!-- Visualisasi Chart -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   const rawData = <?= json_encode($penjualan) ?>;
@@ -231,7 +228,7 @@ foreach ($penjualan as $row) {
   const monthlyMap = {};
   rawData.forEach(item => {
     const [year, month] = item.tanggal.split('-');
-    const key = `${year}-${month}`;
+    const key = `<span class="math-inline">\{year\}\-</span>{month}`;
     monthlyMap[key] = (monthlyMap[key] || 0) + parseInt(item.jumlah);
   });
   const monthlyLabels = Object.keys(monthlyMap);
