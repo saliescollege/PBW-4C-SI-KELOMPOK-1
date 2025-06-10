@@ -27,51 +27,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['stok'])) {
 
         // Ambil info punya ukuran / tidak dari form
         $punya_ukuran_form = [];
+        // Loop through $_POST to find 'punya_ukuran_' prefixed keys
         foreach ($_POST as $key => $val) {
             if (strpos($key, 'punya_ukuran_') === 0) {
-                $id_produk = str_replace('punya_ukuran_', '', $key);
-                $punya_ukuran_form[$id_produk] = $val;
+                // Extract id_produk from the key
+                $current_produk_id = str_replace('punya_ukuran_', '', $key);
+                $punya_ukuran_form[$current_produk_id] = $val;
             }
         }
 
-        foreach ($_POST['stok'] as $id_produk => $sizes) {
-            $punya_ukuran = $punya_ukuran_form[$id_produk] ?? '1';
 
-            if ($punya_ukuran === '0') {
-                // Jika tanpa ukuran: hapus semua stok ukuran dulu
-                $stmtDel = $conn->prepare("DELETE FROM produk_stock WHERE id_produk = ?");
-                $stmtDel->execute([$id_produk]);
+        foreach ($_POST['stok'] as $current_produk_id => $sizes) { // Menggunakan $current_produk_id untuk clarity
+            $punya_ukuran = $punya_ukuran_form[$current_produk_id] ?? '1'; // Default ke '1' (punya ukuran)
 
-                // Simpan stok NO_SIZE saja (harus ada 1 input stok[produk][NO_SIZE])
-                $stok_no_size = intval($sizes['NO_SIZE'] ?? 0);
+            if ($punya_ukuran === '0') { //
+                // Jika tanpa ukuran: update/insert stok NO_SIZE saja
+                $stok_no_size = intval($sizes['NO_SIZE'] ?? 0); //
 
-                $stmtIns = $conn->prepare("INSERT INTO produk_stock (id_produk, size, stok) VALUES (?, NULL, ?)");
-                $stmtIns->execute([$id_produk, $stok_no_size]);
-            } else {
+                // Hapus stok dengan ukuran jika ada. Ini penting jika produk dulunya punya ukuran, lalu diubah jadi tidak punya ukuran.
+                $stmtDelSizes = $conn->prepare("DELETE FROM produk_stock WHERE id_produk = ? AND (size IS NOT NULL AND size != '' AND size != 'NO_SIZE')"); //
+                $stmtDelSizes->execute([$current_produk_id]); //
+
+                // Cek apakah entri 'NO_SIZE' sudah ada
+                $stmtCheckNoSize = $conn->prepare("SELECT id FROM produk_stock WHERE id_produk = ? AND size = 'NO_SIZE'"); //
+                $stmtCheckNoSize->execute([$current_produk_id]); //
+                $rowNoSize = $stmtCheckNoSize->fetch(PDO::FETCH_ASSOC); //
+
+                if ($rowNoSize) { //
+                    // Update stok NO_SIZE existing
+                    $stmtUpdateNoSize = $conn->prepare("UPDATE produk_stock SET stok = ? WHERE id = ?"); //
+                    $stmtUpdateNoSize->execute([$stok_no_size, $rowNoSize['id']]); //
+                } else {
+                    // Insert stok NO_SIZE baru
+                    $stmtInsertNoSize = $conn->prepare("INSERT INTO produk_stock (id_produk, size, stok) VALUES (?, 'NO_SIZE', ?)"); //
+                    $stmtInsertNoSize->execute([$current_produk_id, $stok_no_size]); //
+                }
+            } else { //
                 // Jika dengan ukuran: update/insert stok per size
-                foreach ($sizes as $size => $stok) {
-                    $stok = intval($stok);
-                    $size = $size === 'NO_SIZE' ? NULL : strtoupper(trim($size));
+                foreach ($sizes as $size => $stok) { //
+                    $stok = intval($stok); //
+                    $size = strtoupper(trim($size)); // Pastikan size uppercase dan trim
+
+                    // Skip jika size adalah 'NO_SIZE' saat punya_ukuran adalah '1'
+                    if ($size === 'NO_SIZE') { //
+                        continue; //
+                    }
 
                     // cek ada stok untuk produk & ukuran tersebut
-                    $stmt = $conn->prepare("SELECT id FROM produk_stock WHERE id_produk = ? AND size <=> ?");
-                    $stmt->execute([$id_produk, $size]);
-                    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $stmt = $conn->prepare("SELECT id FROM produk_stock WHERE id_produk = ? AND size = ?"); // Pakai = untuk string
+                    $stmt->execute([$current_produk_id, $size]); //
+                    $row = $stmt->fetch(PDO::FETCH_ASSOC); //
 
-                    if ($row) {
+                    if ($row) { //
                         // update stok existing
-                        $stmtUpdate = $conn->prepare("UPDATE produk_stock SET stok = ? WHERE id = ?");
-                        $stmtUpdate->execute([$stok, $row['id']]);
+                        $stmtUpdate = $conn->prepare("UPDATE produk_stock SET stok = ? WHERE id = ?"); //
+                        $stmtUpdate->execute([$stok, $row['id']]); //
                     } else {
                         // insert stok baru
-                        $stmtInsert = $conn->prepare("INSERT INTO produk_stock (id_produk, size, stok) VALUES (?, ?, ?)");
-                        $stmtInsert->execute([$id_produk, $size, $stok]);
+                        $stmtInsert = $conn->prepare("INSERT INTO produk_stock (id_produk, size, stok) VALUES (?, ?, ?)"); //
+                        $stmtInsert->execute([$current_produk_id, $size, $stok]); //
                     }
                 }
 
                 // Pastikan hapus stok NO_SIZE jika ada, karena sekarang pakai ukuran
-                $stmtDelNoSize = $conn->prepare("DELETE FROM produk_stock WHERE id_produk = ? AND size IS NULL");
-                $stmtDelNoSize->execute([$id_produk]);
+                $stmtDelNoSize = $conn->prepare("DELETE FROM produk_stock WHERE id_produk = ? AND size = 'NO_SIZE'"); //
+                $stmtDelNoSize->execute([$current_produk_id]); //
             }
         }
 
@@ -89,36 +109,38 @@ $stmt = $conn->prepare("
     FROM produk p
     LEFT JOIN produk_stock ps ON p.id_produk = ps.id_produk
     WHERE p.id_produk = ?
-    ORDER BY FIELD(ps.size, 'XS', 'S', 'M', 'L', 'XL')
-");
-$stmt->execute([$id_produk]);
-$produk_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    ORDER BY FIELD(ps.size, 'XS', 'S', 'M', 'L', 'XL'), ps.size ASC
+"); //
+$stmt->execute([$id_produk]); //
+$produk_data = $stmt->fetchAll(PDO::FETCH_ASSOC); //
 
 // Kelompokkan data stok per produk dan cek punya ukuran
-$produk_list = [];
-foreach ($produk_data as $row) {
-    $id = $row['id_produk'];
-    if (!isset($produk_list[$id])) {
-        $produk_list[$id] = [
-            'id_produk' => $id,
-            'nama_produk' => $row['nama_produk'],
-            'kategori' => $row['kategori'],
-            'warna' => $row['warna'],
-            'harga' => $row['harga'],
-            'stok' => [],
-            'punya_ukuran' => false,
+$produk_list = []; //
+foreach ($produk_data as $row) { //
+    $id = $row['id_produk']; //
+    if (!isset($produk_list[$id])) { //
+        $produk_list[$id] = [ //
+            'id_produk' => $id, //
+            'nama_produk' => $row['nama_produk'], //
+            'kategori' => $row['kategori'], //
+            'warna' => $row['warna'], //
+            'harga' => $row['harga'], //
+            'stok' => [], //
+            'punya_ukuran' => false, // Default to false
         ];
     }
-    $size = $row['size'] ?? 'NO_SIZE';
-    $produk_list[$id]['stok'][$size] = $row['stok'] ?? 0;
+    // Jika size adalah NULL atau string kosong, anggap sebagai 'NO_SIZE'
+    $size = ($row['size'] === NULL || $row['size'] === '') ? 'NO_SIZE' : $row['size']; //
+    $produk_list[$id]['stok'][$size] = $row['stok'] ?? 0; //
 
-    if ($size !== 'NO_SIZE') {
-        $produk_list[$id]['punya_ukuran'] = true;
+    if ($size !== 'NO_SIZE') { // Jika ada size yang bukan 'NO_SIZE', berarti punya ukuran
+        $produk_list[$id]['punya_ukuran'] = true; //
     }
 }
 
+
 // Ukuran standar
-$sizes = ['XS', 'S', 'M', 'L', 'XL'];
+$sizes = ['XS', 'S', 'M', 'L', 'XL']; //
 ?>
 
 <!DOCTYPE html>
@@ -170,11 +192,10 @@ $sizes = ['XS', 'S', 'M', 'L', 'XL'];
 </head>
 
 <div class="d-flex">
-<?php include '../sidebar.php'; ?>
+<?php include '../sidebar.php'; // ?>
 
 <div class="flex-grow-1 p-4">
     <h1>Produk</h1>
-    <!-- Breadcrumbs -->
     <nav aria-label="breadcrumb">
         <ul class="breadcrumb-custom" id="breadcrumb">
             <li><a href="produk.php">List Produk</a></li>
@@ -215,7 +236,6 @@ $sizes = ['XS', 'S', 'M', 'L', 'XL'];
                     </div>
 
                     <?php if ($produk['punya_ukuran']): ?>
-                        <!-- Input stok dengan ukuran -->
                         <div class="size-inputs stok-ukuran">
                             <?php foreach ($sizes as $size): ?>
                                 <div>
@@ -228,7 +248,6 @@ $sizes = ['XS', 'S', 'M', 'L', 'XL'];
                             <?php endforeach; ?>
                         </div>
                     <?php else: ?>
-                        <!-- Input stok tanpa ukuran -->
                         <div class="stok-no-ukuran">
                             <label for="stok_NO_SIZE_<?= $produk['id_produk'] ?>" class="form-label">Stok</label>
                             <input type="number" min="0" class="form-control"
@@ -237,6 +256,7 @@ $sizes = ['XS', 'S', 'M', 'L', 'XL'];
                                    value="<?= $produk['stok']['NO_SIZE'] ?? 0 ?>" />
                         </div>
                     <?php endif; ?>
+                     <input type="hidden" name="punya_ukuran_<?= $produk['id_produk'] ?>" value="<?= $produk['punya_ukuran'] ? '1' : '0' ?>">
                 </div>
             <?php endforeach; ?>
 

@@ -101,6 +101,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['namaPelanggan'])) {
                     $id_stock = null;
                 }
                 $stmt->close();
+            } else {
+                // Jika produk tanpa ukuran, cari id_stock dengan size 'NO_SIZE'
+                $stmt = $conn->prepare("SELECT id FROM produk_stock WHERE id_produk = ? AND size = 'NO_SIZE'");
+                $stmt->bind_param("i", $id_produk);
+                $stmt->execute();
+                $stmt->bind_result($id_stock);
+                if (!$stmt->fetch()) {
+                    $id_stock = null;
+                }
+                $stmt->close();
             }
             if ($id_stock) {
                 $stmt = $conn->prepare("UPDATE produk_stock SET stok = stok - ? WHERE id = ?");
